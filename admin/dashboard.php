@@ -1,90 +1,478 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../assets/css/style.css">
-</head>
-<body>
-    <?php
-    session_start();
-    require_once '../includes/db.php';
-    requireLogin('admin');
-    ?>
+<?php
+session_start();
+require_once '../includes/db.php';
+requireLogin('admin');
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="#">Admin Dashboard</a>
-            <div class="navbar-nav ms-auto">
-                <span class="navbar-text me-3">Welcome, Admin</span>
-                <a class="nav-link" href="../logout.php">Logout</a>
-            </div>
-        </div>
-    </nav>
+// Get statistics
+$stmt = $pdo->query("SELECT COUNT(*) as count FROM patients");
+$patients = $stmt->fetch()['count'];
 
-    <div class="container-fluid mt-4">
-        <div class="row">
-            <div class="col-md-2">
-                <div class="list-group">
-                    <a href="dashboard.php" class="list-group-item list-group-item-action active">Dashboard</a>
-                    <a href="register_doctor.php" class="list-group-item list-group-item-action">Register Doctor</a>
-                    <a href="register_police.php" class="list-group-item list-group-item-action">Register Police</a>
-                    <a href="manage_users.php" class="list-group-item list-group-item-action">Manage Users</a>
-                    <a href="reports.php" class="list-group-item list-group-item-action">Reports</a>
+$stmt = $pdo->query("SELECT COUNT(*) as count FROM doctors");
+$doctors = $stmt->fetch()['count'];
+
+$stmt = $pdo->query("SELECT COUNT(*) as count FROM police_officers");
+$police = $stmt->fetch()['count'];
+
+$stmt = $pdo->query("SELECT COUNT(*) as count FROM pf3_cases");
+$total_cases = $stmt->fetch()['count'];
+
+$stmt = $pdo->query("SELECT COUNT(*) as count FROM pf3_cases WHERE status = 'APPROVED'");
+$approved_cases = $stmt->fetch()['count'];
+
+$stmt = $pdo->query("SELECT COUNT(*) as count FROM pf3_cases WHERE status = 'PENDING'");
+$pending_cases = $stmt->fetch()['count'];
+
+$stmt = $pdo->query("SELECT COUNT(*) as count FROM medical_reports");
+$medical_reports = $stmt->fetch()['count'];
+
+// Get recent activities
+$stmt = $pdo->query("
+    SELECT * FROM audit_logs 
+    ORDER BY created_at DESC 
+    LIMIT 10
+");
+$recent_activities = $stmt->fetchAll();
+
+include 'header.php';
+?>
+
+<style>
+    .stat-card {
+        border: none;
+        border-radius: 15px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+    }
+    
+    .table-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    .table-card .card-header {
+        background: white;
+        border-bottom: 2px solid #f0f0f0;
+        padding: 1.25rem 1.5rem;
+        border-radius: 15px 15px 0 0;
+    }
+    
+    .quick-action-btn {
+        padding: 1rem;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        text-align: center;
+        background: #f8f9fa;
+    }
+    
+    .quick-action-btn:hover {
+        background: linear-gradient(135deg, #A6EDCF  0%, #A6EDCF  100%);
+        color: white;
+        transform: translateY(-3px);
+    }
+    
+    .quick-action-btn i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+</style>
+
+<div class="row g-4 mb-4">
+    <!-- Statistics Cards -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Total Patients</h6>
+                        <h3 class="mb-0 fw-bold"><?php echo $patients; ?></h3>
+                    </div>
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                        <i class="fas fa-users"></i>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-10">
-                <h3>System Overview</h3>
-                <div class="row">
-                    <?php
-                    $stmt = $pdo->query("SELECT COUNT(*) as count FROM patients");
-                    $patients = $stmt->fetch()['count'];
-                    $stmt = $pdo->query("SELECT COUNT(*) as count FROM doctors");
-                    $doctors = $stmt->fetch()['count'];
-                    $stmt = $pdo->query("SELECT COUNT(*) as count FROM police_officers");
-                    $police = $stmt->fetch()['count'];
-                    $stmt = $pdo->query("SELECT COUNT(*) as count FROM pf3_cases WHERE status = 'APPROVED'");
-                    $approved = $stmt->fetch()['count'];
-                    ?>
-                    <div class="col-md-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <h5 class="card-title">Total Patients</h5>
-                                <p class="card-text"><?php echo $patients; ?></p>
-                            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Doctors</h6>
+                        <h3 class="mb-0 fw-bold text-info"><?php echo $doctors; ?></h3>
+                    </div>
+                    <div class="stat-icon bg-info bg-opacity-10 text-info">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Police Officers</h6>
+                        <h3 class="mb-0 fw-bold text-warning"><?php echo $police; ?></h3>
+                    </div>
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Medical Reports</h6>
+                        <h3 class="mb-0 fw-bold text-success"><?php echo $medical_reports; ?></h3>
+                    </div>
+                    <div class="stat-icon bg-success bg-opacity-10 text-success">
+                        <i class="fas fa-file-medical"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Total Cases</h6>
+                        <h3 class="mb-0 fw-bold"><?php echo $total_cases; ?></h3>
+                    </div>
+                    <div class="stat-icon bg-secondary bg-opacity-10 text-secondary">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Pending Cases</h6>
+                        <h3 class="mb-0 fw-bold text-warning"><?php echo $pending_cases; ?></h3>
+                    </div>
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Approved Cases</h6>
+                        <h3 class="mb-0 fw-bold text-success"><?php echo $approved_cases; ?></h3>
+                    </div>
+                    <div class="stat-icon bg-success bg-opacity-10 text-success">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Rejected Cases</h6>
+                        <h3 class="mb-0 fw-bold text-danger"><?php echo $total_cases - $approved_cases - $pending_cases; ?></h3>
+                    </div>
+                    <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Quick Actions -->
+    <div class="col-lg-4">
+        <div class="card table-card shadow-sm">
+            <div class="card-header">
+                <h6 class="mb-0 fw-bold">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="quick-action-btn" onclick="openRegisterDoctorModal()">
+                            <i class="fas fa-user-md"></i>
+                            <div class="fw-bold">Register Doctor</div>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <h5 class="card-title">Doctors</h5>
-                                <p class="card-text"><?php echo $doctors; ?></p>
-                            </div>
+                    <div class="col-6">
+                        <div class="quick-action-btn" onclick="openRegisterPoliceModal()">
+                            <i class="fas fa-user-shield"></i>
+                            <div class="fw-bold">Register Police</div>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <h5 class="card-title">Police Officers</h5>
-                                <p class="card-text"><?php echo $police; ?></p>
-                            </div>
+                    <div class="col-12">
+                        <div class="quick-action-btn" onclick="window.location.href='manage_users.php'">
+                            <i class="fas fa-users"></i>
+                            <div class="fw-bold">Manage Users</div>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <h5 class="card-title">Approved Cases</h5>
-                                <p class="card-text"><?php echo $approved; ?></p>
-                            </div>
+                    <div class="col-12">
+                        <div class="quick-action-btn" onclick="window.location.href='reports.php'">
+                            <i class="fas fa-chart-bar"></i>
+                            <div class="fw-bold">View Reports</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    
+    <!-- Recent Activities -->
+    <div class="col-lg-8">
+        <div class="card table-card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold">
+                    <i class="fas fa-history me-2"></i>Recent Activities
+                </h6>
+                <a href="audit_log.php" class="btn btn-sm btn-outline-danger">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Action</th>
+                                <th>User Type</th>
+                                <th>Details</th>
+                                <th>Date/Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (count($recent_activities) > 0): ?>
+                                <?php foreach ($recent_activities as $activity): ?>
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-secondary"><?php echo htmlspecialchars($activity['action']); ?></span>
+                                    </span>
+                                    <td><?php echo ucfirst(htmlspecialchars($activity['user_type'])); ?></td>
+                                    <td><?php echo htmlspecialchars(substr($activity['details'], 0, 50)); ?>...</span>
+                                    <td><?php echo date('d/m/Y H:i:s', strtotime($activity['created_at'])); ?></span>
+                                </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="4" class="text-center py-4">No activities found</span>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<!-- Register Doctor Modal -->
+<div class="modal fade" id="registerDoctorModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-md me-2"></i>Register New Doctor
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="process_register.php" method="POST" onsubmit="return validateDoctorForm()">
+                <div class="modal-body">
+                    <input type="hidden" name="type" value="doctor">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">First Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-modal" name="first_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Last Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-modal" name="last_name" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold">Position/Specialization <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-modal" name="position" placeholder="e.g., Cardiologist, General Physician" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Email Address <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control form-control-modal" name="email" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Phone Number <span class="text-danger">*</span></label>
+                            <input type="tel" class="form-control form-control-modal" name="phone" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control form-control-modal" id="doctor_password" name="password" required>
+                            <div class="form-text">Minimum 6 characters</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Confirm Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control form-control-modal" id="doctor_confirm_password" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Register Doctor</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Register Police Modal -->
+<div class="modal fade" id="registerPoliceModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-shield me-2"></i>Register New Police Officer
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="process_register.php" method="POST" onsubmit="return validatePoliceForm()">
+                <div class="modal-body">
+                    <input type="hidden" name="type" value="police">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">First Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-modal" name="first_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Last Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-modal" name="last_name" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold">Rank/Position <span class="text-danger">*</span></label>
+                            <select class="form-select form-select-modal" name="rank" required>
+                                <option value="">Select Rank</option>
+                                <option value="Police Constable">Police Constable (PC)</option>
+                                <option value="Corporal">Corporal (CPL)</option>
+                                <option value="Sergeant">Sergeant (SGT)</option>
+                                <option value="Inspector">Inspector (INSP)</option>
+                                <option value="Chief Inspector">Chief Inspector (C/INSP)</option>
+                                <option value="Assistant Superintendent">Assistant Superintendent (ASP)</option>
+                                <option value="Superintendent">Superintendent (SP)</option>
+                                <option value="Senior Superintendent">Senior Superintendent (SSP)</option>
+                                <option value="Commissioner">Commissioner (CP)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Email Address <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control form-control-modal" name="email" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Phone Number <span class="text-danger">*</span></label>
+                            <input type="tel" class="form-control form-control-modal" name="phone" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control form-control-modal" id="police_password" name="password" required>
+                            <div class="form-text">Minimum 6 characters</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Confirm Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control form-control-modal" id="police_confirm_password" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Register Police Officer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openRegisterDoctorModal() {
+    const modal = new bootstrap.Modal(document.getElementById('registerDoctorModal'));
+    modal.show();
+}
+
+function openRegisterPoliceModal() {
+    const modal = new bootstrap.Modal(document.getElementById('registerPoliceModal'));
+    modal.show();
+}
+
+function validateDoctorForm() {
+    const password = document.getElementById('doctor_password').value;
+    const confirm = document.getElementById('doctor_confirm_password').value;
+    
+    if (password.length < 6) {
+        alert('Password must be at least 6 characters long');
+        return false;
+    }
+    
+    if (password !== confirm) {
+        alert('Passwords do not match');
+        return false;
+    }
+    
+    return true;
+}
+
+function validatePoliceForm() {
+    const password = document.getElementById('police_password').value;
+    const confirm = document.getElementById('police_confirm_password').value;
+    
+    if (password.length < 6) {
+        alert('Password must be at least 6 characters long');
+        return false;
+    }
+    
+    if (password !== confirm) {
+        alert('Passwords do not match');
+        return false;
+    }
+    
+    return true;
+}
+</script>
+
+<?php include 'footer.php'; ?>

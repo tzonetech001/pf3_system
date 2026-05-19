@@ -104,3 +104,12 @@ CREATE TABLE audit_logs (
 
 -- Insert default admin
 INSERT INTO admins (username, email, phone, password) VALUES ('admin', 'admin@gmail.com', '1234567890', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'); -- Password: Admin@123
+
+-- Add status column to doctors table
+ALTER TABLE doctors ADD COLUMN status ENUM('active', 'inactive') DEFAULT 'active';
+
+-- Add status column to police_officers table
+ALTER TABLE police_officers ADD COLUMN status ENUM('active', 'inactive') DEFAULT 'active';
+
+-- Add status column to admins table
+ALTER TABLE admins ADD COLUMN status ENUM('active', 'inactive') DEFAULT 'active';
