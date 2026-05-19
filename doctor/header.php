@@ -27,7 +27,6 @@ if (!isset($_SESSION['user_id'])) {
             overflow-x: hidden;
         }
 
-        /* Top Navbar Styles */
         .top-navbar {
             background: white;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
@@ -40,7 +39,6 @@ if (!isset($_SESSION['user_id'])) {
             padding: 0 1.5rem;
         }
 
-        /* Sidebar Styles */
         .sidebar {
             position: fixed;
             top: 70px;
@@ -52,6 +50,8 @@ if (!isset($_SESSION['user_id'])) {
             transition: all 0.3s ease;
             z-index: 1020;
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
         }
 
         .sidebar.collapsed {
@@ -70,9 +70,9 @@ if (!isset($_SESSION['user_id'])) {
             margin-left: 0;
         }
 
-        /* Sidebar Menu Items */
         .sidebar-menu {
             padding: 1.5rem 0;
+            flex: 1;
         }
 
         .menu-item {
@@ -89,7 +89,7 @@ if (!isset($_SESSION['user_id'])) {
 
         .menu-item:hover {
             background: #f7fafc;
-            color: #1a56db;
+            color: #11998e;
         }
 
         .menu-item.active {
@@ -107,7 +107,45 @@ if (!isset($_SESSION['user_id'])) {
             font-weight: 500;
         }
 
-        /* Avatar Styles */
+        .sidebar-footer {
+            padding: 1rem 0;
+            border-top: 1px solid #e2e8f0;
+            margin-top: auto;
+        }
+
+        .sidebar-user {
+            padding: 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.75rem;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        .sidebar-user-name {
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 0.25rem;
+        }
+
+        .sidebar-user-role {
+            font-size: 0.8rem;
+            color: #11998e;
+            font-weight: 500;
+        }
+
         .avatar {
             width: 45px;
             height: 45px;
@@ -128,7 +166,6 @@ if (!isset($_SESSION['user_id'])) {
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
-        /* Dropdown Menu */
         .dropdown-menu-custom {
             position: absolute;
             top: 100%;
@@ -150,7 +187,16 @@ if (!isset($_SESSION['user_id'])) {
             transform: translateY(0);
         }
 
-        /* Mobile Sidebar Overlay */
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .dropdown-item:hover {
+            background: #f8f9fa;
+            padding-left: 1.25rem;
+        }
+
         .sidebar-overlay {
             position: fixed;
             top: 0;
@@ -166,7 +212,6 @@ if (!isset($_SESSION['user_id'])) {
             display: block;
         }
 
-        /* Toggle Button */
         .toggle-btn {
             background: transparent;
             border: none;
@@ -181,7 +226,6 @@ if (!isset($_SESSION['user_id'])) {
             color: #11998e;
         }
 
-        /* Logo Section */
         .logo-section {
             display: flex;
             align-items: center;
@@ -202,7 +246,6 @@ if (!isset($_SESSION['user_id'])) {
             background-clip: text;
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
             .sidebar {
                 left: -280px;
@@ -221,7 +264,6 @@ if (!isset($_SESSION['user_id'])) {
             }
         }
 
-        /* Scrollbar */
         .sidebar::-webkit-scrollbar {
             width: 5px;
         }
@@ -235,7 +277,6 @@ if (!isset($_SESSION['user_id'])) {
             border-radius: 5px;
         }
 
-        /* Animations */
         @keyframes slideIn {
             from {
                 opacity: 0;
@@ -253,7 +294,6 @@ if (!isset($_SESSION['user_id'])) {
     </style>
 </head>
 <body>
-    <!-- Top Navbar -->
     <nav class="top-navbar">
         <div class="d-flex justify-content-between align-items-center h-100">
             <div class="d-flex align-items-center gap-3">
@@ -282,7 +322,6 @@ if (!isset($_SESSION['user_id'])) {
                         ?>
                     </div>
                     
-                    <!-- Custom Dropdown -->
                     <div class="dropdown-menu-custom" id="dropdownMenu">
                         <div class="p-3 border-bottom">
                             <div class="d-flex align-items-center gap-3">
@@ -320,11 +359,19 @@ if (!isset($_SESSION['user_id'])) {
         </div>
     </nav>
 
-    <!-- Sidebar Overlay for Mobile -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
+        <div class="sidebar-user">
+            <div class="sidebar-avatar">
+                <?php echo $initials; ?>
+            </div>
+            <div class="sidebar-user-name"><?php echo htmlspecialchars($name); ?></div>
+            <div class="sidebar-user-role">
+                <i class="fas fa-user-md me-1"></i> Medical Doctor
+            </div>
+        </div>
+        
         <div class="sidebar-menu">
             <a href="dashboard.php" class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'active' : ''; ?>">
                 <i class="fas fa-tachometer-alt"></i>
@@ -339,7 +386,25 @@ if (!isset($_SESSION['user_id'])) {
                 <span>My Reports</span>
             </a>
         </div>
+        
+        <div class="sidebar-footer">
+            <a href="profile.php" class="menu-item">
+                <i class="fas fa-user-circle"></i>
+                <span>My Profile</span>
+            </a>
+            <a href="profile.php#password" class="menu-item">
+                <i class="fas fa-key"></i>
+                <span>Change Password</span>
+            </a>
+            <a href="profile.php#activity" class="menu-item">
+                <i class="fas fa-history"></i>
+                <span>Activity Log</span>
+            </a>
+            <a href="../logout.php" class="menu-item" style="color: #A6EDCF ;">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </div>
     </div>
 
-    <!-- Main Content -->
     <div class="main-content" id="mainContent">
