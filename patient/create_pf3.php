@@ -53,11 +53,10 @@
                                     <option value="">Select Gender</option>
                                     <option value="Male">Male</option>
                                     <option value="Female">Female</option>
-                                    <option value="Other">Other</option>
                                 </select>
                             </div>
                             <div class="mb-3">
-                                <label for="age" class="form-label">Age</label>
+                                <label f~r="age" class="form-label">Age</label>
                                 <input type="number" class="form-control" id="age" name="age" required>
                             </div>
                             <div class="mb-3">
