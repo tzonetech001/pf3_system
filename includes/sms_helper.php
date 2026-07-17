@@ -76,7 +76,7 @@ function validatePhoneNumber($phone) {
 /**
  * Send SMS using Beem API
  * @param string $phone Recipient phone number
- * @param string $message SMS message (max 159 characters)
+ * @param string $message SMS message (max 155 characters)
  * @return array Response data
  */
 function sendSMS($phone, $message) {
@@ -93,9 +93,9 @@ function sendSMS($phone, $message) {
         return ['success' => false, 'message' => 'Invalid phone number: ' . $phone];
     }
     
-    // Limit message to 159 characters (Beem recommended max)
-    if (strlen($message) > 159) {
-        $message = substr($message, 0, 159);
+    // Limit message to 155 characters (max allowed)
+    if (strlen($message) > 155) {
+        $message = substr($message, 0, 155);
     }
     
     // Prepare data for Beem API
@@ -163,26 +163,26 @@ function sendPF3ApplicationSMS($phone, $name, $pf3_number) {
     
     // Get language preference
     if ($lang === 'sw') {
-        // KISWAHILI MESSAGE
-        $message = "PF3 SYS: Mteja $name, maombi yako ya PF3 #$pf3_number yamewasilishwa. Tumia nambari hii kumalizia maombi na kufuatilia hali yake. Asante!";
+        // KISWAHILI MESSAGE - MAX 155 CHARACTERS
+        $message = "PF3 SYS: Mteja $name, maombi #$pf3_number yamewasilishwa. Tumia nambari kufuatilia. Asante!";
         
-        // Ensure message doesn't exceed 159 characters
-        if (strlen($message) > 159) {
-            $name_short = strlen($name) > 10 ? substr($name, 0, 10) : $name;
-            $message = "PF3 SYS: $name_short, maombi #$pf3_number yamewasilishwa. Tumia nambari hii kumalizia na kufuatilia maombi yako. Asante!";
-            if (strlen($message) > 159) {
-                $message = "PF3 SYS: Maombi #$pf3_number yamewasilishwa. Tumia nambari hii kumalizia na kufuatilia. Asante!";
+        // Ensure message doesn't exceed 155 characters
+        if (strlen($message) > 155) {
+            $name_short = strlen($name) > 8 ? substr($name, 0, 8) : $name;
+            $message = "PF3 SYS: $name_short, maombi #$pf3_number yamewasilishwa. Tumia nambari kufuatilia. Asante!";
+            if (strlen($message) > 155) {
+                $message = "PF3 SYS: Maombi #$pf3_number yamewasilishwa. Tumia nambari kufuatilia. Asante!";
             }
         }
     } else {
-        // ENGLISH MESSAGE
-        $message = "PF3 SYS: Dear $name, your PF3 application #$pf3_number has been submitted. Use this number to complete your application and track its status. Thank you!";
+        // ENGLISH MESSAGE - MAX 155 CHARACTERS
+        $message = "PF3 SYS: Dear $name, application #$pf3_number submitted. Use number to track. Thank you!";
         
-        if (strlen($message) > 159) {
-            $name_short = strlen($name) > 10 ? substr($name, 0, 10) : $name;
-            $message = "PF3 SYS: Dear $name_short, application #$pf3_number submitted. Use this number to complete and track your application. Thank you!";
-            if (strlen($message) > 159) {
-                $message = "PF3 SYS: Application #$pf3_number submitted. Use this number to complete and track. Thank you!";
+        if (strlen($message) > 155) {
+            $name_short = strlen($name) > 8 ? substr($name, 0, 8) : $name;
+            $message = "PF3 SYS: Dear $name_short, app #$pf3_number submitted. Use number to track. Thank you!";
+            if (strlen($message) > 155) {
+                $message = "PF3 SYS: Application #$pf3_number submitted. Use number to track. Thank you!";
             }
         }
     }
@@ -191,13 +191,13 @@ function sendPF3ApplicationSMS($phone, $name, $pf3_number) {
 }
 
 /**
- * Send PF3 Status Update SMS Notification to Patient ONLY
+ * Send PF3 Status Update SMS - APPROVED or REJECTED only
  * @param string $phone Patient phone number (255 format)
  * @param string $name Patient name
  * @param string $pf3_number PF3 number
- * @param string $status New status (APPROVED, REJECTED, PENDING)
- * @param string $police_notes Optional police notes
- * @param string $rb_number Optional RB number
+ * @param string $status New status (APPROVED or REJECTED only)
+ * @param string $police_notes Optional police notes (for rejection)
+ * @param string $rb_number Optional RB number (for approval)
  * @return array Response data
  */
 function sendPF3StatusUpdateSMS($phone, $name, $pf3_number, $status, $police_notes = '', $rb_number = '') {
@@ -210,76 +210,96 @@ function sendPF3StatusUpdateSMS($phone, $name, $pf3_number, $status, $police_not
         return ['success' => false, 'message' => 'Invalid phone number: ' . $phone];
     }
     
-    // Status translation
-    $status_map_en = [
-        'APPROVED' => 'APPROVED',
-        'REJECTED' => 'REJECTED',
-        'PENDING' => 'PENDING'
-    ];
+    // ============================================================
+    // ONLY APPROVED AND REJECTED - NO PENDING
+    // MAX 155 CHARACTERS
+    // ============================================================
     
-    $status_map_sw = [
-        'APPROVED' => 'IMEKUBALIWA',
-        'REJECTED' => 'IMEKATALIWA',
-        'PENDING' => 'INASUBIRI'
-    ];
-    
-    $status_display = ($lang === 'sw') ? ($status_map_sw[$status] ?? $status) : ($status_map_en[$status] ?? $status);
-    
-    if ($lang === 'sw') {
-        // KISWAHILI MESSAGE
-        if ($status === 'APPROVED') {
-            $message = "PF3 SYS: Mteja $name, maombi yako #$pf3_number yamekubaliwa";
-            if ($rb_number) {
-                $message .= ". Nambari ya RB: $rb_number";
+    if ($status === 'APPROVED') {
+        // ============================================================
+        // APPROVED SMS - Patient should visit doctor/hospital
+        // ============================================================
+        if ($lang === 'sw') {
+            // KISWAHILI - APPROVED
+            $rb_text = $rb_number ? " RB: $rb_number." : ".";
+            $message = "PF3 SYS: Mteja $name, maombi #$pf3_number yamekubaliwa$rb_text Nenda hospitali kwa daktari. Asante!";
+            
+            // Shorten if needed (max 155 chars)
+            if (strlen($message) > 155) {
+                $name_short = strlen($name) > 6 ? substr($name, 0, 6) : $name;
+                $rb_text = $rb_number ? " RB: $rb_number." : ".";
+                $message = "PF3 SYS: $name_short, maombi #$pf3_number yamekubaliwa$rb_text Nenda hospitali. Asante!";
             }
-            $message .= ". Endelea na hatua za matibabu. Asante!";
-        } elseif ($status === 'REJECTED') {
-            $message = "PF3 SYS: Mteja $name, maombi yako #$pf3_number yamekataliwa";
-            if ($police_notes) {
-                $message .= ". Sababu: " . substr($police_notes, 0, 30);
+            // Final truncation to 155 chars
+            if (strlen($message) > 155) {
+                $message = substr($message, 0, 152) . '...';
             }
-            $message .= ". Tafadhali wasiliana na polisi. Asante!";
+            
         } else {
-            $message = "PF3 SYS: Mteja $name, maombi yako #$pf3_number yanasubiri ukaguzi wa polisi. Tutakujulisha. Asante!";
-        }
-        
-        // Ensure message doesn't exceed 159 characters
-        if (strlen($message) > 159) {
-            $name_short = strlen($name) > 10 ? substr($name, 0, 10) : $name;
-            $message = "PF3 SYS: $name_short, maombi #$pf3_number " . strtolower($status_display);
-            if ($status === 'APPROVED' && $rb_number) {
-                $message .= ". RB: $rb_number";
+            // ENGLISH - APPROVED
+            $rb_text = $rb_number ? " RB: $rb_number." : ".";
+            $message = "PF3 SYS: Dear $name, application #$pf3_number APPROVED$rb_text Visit hospital for medical exam. Thank you!";
+            
+            // Shorten if needed (max 155 chars)
+            if (strlen($message) > 155) {
+                $name_short = strlen($name) > 6 ? substr($name, 0, 6) : $name;
+                $rb_text = $rb_number ? " RB: $rb_number." : ".";
+                $message = "PF3 SYS: $name_short, app #$pf3_number APPROVED$rb_text Visit hospital. Thank you!";
             }
-            $message .= ". Asante!";
-        }
-    } else {
-        // ENGLISH MESSAGE
-        if ($status === 'APPROVED') {
-            $message = "PF3 SYS: Dear $name, your application #$pf3_number has been APPROVED";
-            if ($rb_number) {
-                $message .= ". RB Number: $rb_number";
+            // Final truncation to 155 chars
+            if (strlen($message) > 155) {
+                $message = substr($message, 0, 152) . '...';
             }
-            $message .= ". Please proceed with medical examination. Thank you!";
-        } elseif ($status === 'REJECTED') {
-            $message = "PF3 SYS: Dear $name, your application #$pf3_number has been REJECTED";
-            if ($police_notes) {
-                $message .= ". Reason: " . substr($police_notes, 0, 30);
-            }
-            $message .= ". Please contact the police station. Thank you!";
-        } else {
-            $message = "PF3 SYS: Dear $name, your application #$pf3_number is PENDING police review. We will notify you. Thank you!";
-        }
-        
-        if (strlen($message) > 159) {
-            $name_short = strlen($name) > 10 ? substr($name, 0, 10) : $name;
-            $message = "PF3 SYS: $name_short, application #$pf3_number " . $status_display;
-            if ($status === 'APPROVED' && $rb_number) {
-                $message .= ". RB: $rb_number";
-            }
-            $message .= ". Thank you!";
         }
     }
     
+    elseif ($status === 'REJECTED') {
+        // ============================================================
+        // REJECTED SMS - Clear message with reason
+        // ============================================================
+        // Truncate police notes for SMS
+        $reason = $police_notes ? substr($police_notes, 0, 35) : 'No reason';
+        if (strlen($police_notes) > 35) {
+            $reason .= '...';
+        }
+        
+        if ($lang === 'sw') {
+            // KISWAHILI - REJECTED
+            $reason_text = $police_notes ? " Sababu: $reason." : ".";
+            $message = "PF3 SYS: Mteja $name, maombi #$pf3_number yamekataliwa$reason_text Wasiliana na polisi. Asante!";
+            
+            // Shorten if needed (max 155 chars)
+            if (strlen($message) > 155) {
+                $name_short = strlen($name) > 6 ? substr($name, 0, 6) : $name;
+                $reason_short = $police_notes ? substr($police_notes, 0, 20) . '...' : '';
+                $reason_text = $reason_short ? " Sababu: $reason_short." : ".";
+                $message = "PF3 SYS: $name_short, maombi #$pf3_number yamekataliwa$reason_text Wasiliana polisi. Asante!";
+            }
+            // Final truncation to 155 chars
+            if (strlen($message) > 155) {
+                $message = substr($message, 0, 152) . '...';
+            }
+            
+        } else {
+            // ENGLISH - REJECTED
+            $reason_text = $police_notes ? " Reason: $reason." : ".";
+            $message = "PF3 SYS: Dear $name, application #$pf3_number REJECTED$reason_text Contact police station. Thank you!";
+            
+            // Shorten if needed (max 155 chars)
+            if (strlen($message) > 155) {
+                $name_short = strlen($name) > 6 ? substr($name, 0, 6) : $name;
+                $reason_short = $police_notes ? substr($police_notes, 0, 20) . '...' : '';
+                $reason_text = $reason_short ? " Reason: $reason_short." : ".";
+                $message = "PF3 SYS: $name_short, app #$pf3_number REJECTED$reason_text Contact police. Thank you!";
+            }
+            // Final truncation to 155 chars
+            if (strlen($message) > 155) {
+                $message = substr($message, 0, 152) . '...';
+            }
+        }
+    }
+    
+    // Return the SMS response
     return sendSMS($clean_phone, $message);
 }
 

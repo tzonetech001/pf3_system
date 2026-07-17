@@ -7,213 +7,263 @@ requireLogin('police');
 // Set Tanzania timezone
 date_default_timezone_set('Africa/Dar_es_Salaam');
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    
-    // Get form data
-    $pf3 = isset($_POST['pf3']) ? trim($_POST['pf3']) : '';
-    $decision = isset($_POST['decision']) ? trim($_POST['decision']) : '';
-    $notes = isset($_POST['notes']) ? trim($_POST['notes']) : '';
-    
-    // ============================================
-    // DEBUG - Log all incoming data
-    // ============================================
-    error_log("========== PROCESS CASE ==========");
-    error_log("PF3: " . $pf3);
-    error_log("Decision: " . $decision);
-    error_log("Notes Length: " . strlen($notes));
-    error_log("Notes: " . substr($notes, 0, 200));
-    error_log("===================================");
-    
-    // Validate PF3
-    if (empty($pf3)) {
-        $_SESSION['error_message'] = "PF3 number is required.";
-        header('Location: cases.php?status=PENDING');
+// Check if form was submitted
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    $_SESSION['error_message'] = "Invalid request method.";
+    header('Location: dashboard.php');
+    exit;
+}
+
+// Get form data
+$action = $_POST['action'] ?? '';
+$pf3_number = trim($_POST['pf3_number'] ?? '');
+$police_notes = trim($_POST['police_notes'] ?? '');
+$rb_number = trim($_POST['rb_number'] ?? '');
+
+// Validate inputs
+if (empty($action) || empty($pf3_number)) {
+    $_SESSION['error_message'] = "Missing required fields.";
+    header('Location: cases.php?status=PENDING');
+    exit;
+}
+
+if (!in_array($action, ['approve', 'reject'])) {
+    $_SESSION['error_message'] = "Invalid action.";
+    header('Location: cases.php?status=PENDING');
+    exit;
+}
+
+// Validate action-specific fields
+if ($action === 'approve') {
+    if (empty($rb_number)) {
+        $_SESSION['error_message'] = "RB number is required for approval.";
+        header('Location: view_case.php?pf3=' . $pf3_number);
         exit;
     }
-    
-    // Validate Decision
-    if (empty($decision)) {
-        $_SESSION['error_message'] = "Please select a decision (Approve or Reject).";
-        header('Location: view_case.php?pf3=' . $pf3);
-        exit;
+}
+
+if ($action === 'reject') {
+    // If police notes are empty, use default message
+    if (empty($police_notes)) {
+        $police_notes = "Application rejected by police officer.";
     }
+}
+
+try {
+    // Start transaction
+    $pdo->beginTransaction();
     
-    // Get case details
-    $case = getCaseByPF3($pf3);
+    // ============================================================
+    // STEP 1: Get the case details and verify it's PENDING
+    // ============================================================
+    $stmt = $pdo->prepare("
+        SELECT c.*, p.full_name, p.phone, p.guardian_phone 
+        FROM pf3_cases c 
+        JOIN patients p ON c.pf3_number = p.pf3_number 
+        WHERE c.pf3_number = ?
+    ");
+    $stmt->execute([$pf3_number]);
+    $case = $stmt->fetch();
+    
     if (!$case) {
-        $_SESSION['error_message'] = "Case not found!";
-        header('Location: cases.php?status=PENDING');
-        exit;
+        throw new Exception("Case not found.");
     }
-    
-    error_log("Current status in database: " . $case['status']);
     
     // Check if case is already processed
     if ($case['status'] !== 'PENDING') {
-        $_SESSION['error_message'] = "This case has already been processed! Current status: " . $case['status'];
-        header('Location: cases.php?status=PENDING');
-        exit;
+        throw new Exception("This case has already been processed. Current status: " . $case['status']);
     }
     
-    // Get patient details
-    $patient = getPatientByPF3($pf3);
-    if (!$patient) {
-        $_SESSION['error_message'] = "Patient not found!";
-        header('Location: cases.php?status=PENDING');
-        exit;
+    // ============================================================
+    // STEP 2: Update the case status in the database
+    // ============================================================
+    $new_status = strtoupper($action);
+    $updated_at = date('Y-m-d H:i:s');
+    
+    if ($action === 'approve') {
+        // APPROVE: Update status to APPROVED, set RB number
+        $sql = "UPDATE pf3_cases SET 
+                status = 'APPROVED',
+                police_notes = :police_notes,
+                rb_number = :rb_number,
+                updated_at = :updated_at
+                WHERE pf3_number = :pf3_number";
+        
+        $params = [
+            'police_notes' => $police_notes,
+            'rb_number' => $rb_number,
+            'updated_at' => $updated_at,
+            'pf3_number' => $pf3_number
+        ];
+    } else {
+        // REJECT: Update status to REJECTED
+        $sql = "UPDATE pf3_cases SET 
+                status = 'REJECTED',
+                police_notes = :police_notes,
+                rb_number = NULL,
+                updated_at = :updated_at
+                WHERE pf3_number = :pf3_number";
+        
+        $params = [
+            'police_notes' => $police_notes,
+            'updated_at' => $updated_at,
+            'pf3_number' => $pf3_number
+        ];
     }
     
-    try {
-        // ============================================
-        // APPROVE CASE
-        // ============================================
-        if ($decision === 'APPROVE') {
-            
-            // Generate RB number
-            $rb_number = generateRBNumber();
-            
-            // Update database
-            $sql = "UPDATE pf3_cases SET status = 'APPROVED', police_notes = ?, rb_number = ?, updated_at = NOW() WHERE pf3_number = ?";
-            $stmt = $pdo->prepare($sql);
-            $result = $stmt->execute([$notes, $rb_number, $pf3]);
-            
-            if (!$result) {
-                error_log("APPROVE FAILED for PF3: $pf3");
-                $_SESSION['error_message'] = "Failed to approve case. Please try again.";
-                header('Location: view_case.php?pf3=' . $pf3);
-                exit;
-            }
-            
-            error_log("APPROVED successfully: $pf3, RB: $rb_number");
-            
-            // Send SMS to patient
-            $sms_message = "PF3 SYS: Mteja " . $patient['full_name'] . ", maombi yako #$pf3 yamekubaliwa. Namba ya RB: $rb_number. Nenda hospitali kwa daktari. Asante!";
-            if (strlen($sms_message) > 159) {
-                $sms_message = "PF3 SYS: Maombi #$pf3 yamekubaliwa. RB: $rb_number. Nenda hospitali. Asante!";
-            }
-            $sms_result = sendSMS($patient['phone'], $sms_message);
-            
-            // Create notification
-            $stmt = $pdo->prepare("INSERT INTO notifications (pf3_number, message, type) VALUES (?, ?, 'APPROVAL')");
-            $stmt->execute([$pf3, "Case PF3: $pf3 has been APPROVED. RB Number: $rb_number"]);
-            
-            // Log audit
-            logAudit($_SESSION['user_id'], 'police', 'Case Approved', "PF3: $pf3, RB: $rb_number");
-            
-            $_SESSION['success_message'] = "✅ Case approved successfully! RB Number: $rb_number";
-            header('Location: cases.php?status=APPROVED');
-            exit;
-        }
-        
-        // ============================================
-        // REJECT CASE
-        // ============================================
-        elseif ($decision === 'REJECT') {
-            
-            // Validate rejection reason
-            if (empty($notes) || strlen($notes) < 3) {
-                $_SESSION['error_message'] = "Please provide a detailed reason for rejection (at least 3 characters).";
-                header('Location: view_case.php?pf3=' . $pf3);
-                exit;
-            }
-            
-            error_log("Processing REJECT for PF3: $pf3");
-            
-            // ============================================
-            // UPDATE DATABASE - REJECT
-            // ============================================
-            $sql = "UPDATE pf3_cases SET status = 'REJECTED', police_notes = ?, updated_at = NOW() WHERE pf3_number = ?";
-            $stmt = $pdo->prepare($sql);
-            $result = $stmt->execute([$notes, $pf3]);
-            
-            error_log("REJECT SQL: " . $sql);
-            error_log("REJECT Notes: " . substr($notes, 0, 100));
-            error_log("REJECT PF3: " . $pf3);
-            error_log("REJECT Result: " . ($result ? 'TRUE' : 'FALSE'));
-            
-            if (!$result) {
-                $errorInfo = $stmt->errorInfo();
-                error_log("REJECT PDO Error: " . print_r($errorInfo, true));
-                $_SESSION['error_message'] = "Database error: Failed to reject case. " . $errorInfo[2];
-                header('Location: view_case.php?pf3=' . $pf3);
-                exit;
-            }
-            
-            // ============================================
-            // VERIFY UPDATE WAS SUCCESSFUL
-            // ============================================
-            $verify_stmt = $pdo->prepare("SELECT status FROM pf3_cases WHERE pf3_number = ?");
-            $verify_stmt->execute([$pf3]);
-            $updated_case = $verify_stmt->fetch(PDO::FETCH_ASSOC);
-            
-            error_log("Verified status after update: " . ($updated_case ? $updated_case['status'] : 'NOT FOUND'));
-            
-            if (!$updated_case || $updated_case['status'] !== 'REJECTED') {
-                error_log("REJECT VERIFICATION FAILED for PF3: $pf3");
-                $_SESSION['error_message'] = "Failed to update case status to REJECTED. Please try again.";
-                header('Location: view_case.php?pf3=' . $pf3);
-                exit;
-            }
-            
-            error_log("✅ REJECTED successfully: $pf3");
-            
-            // ============================================
-            // SEND SMS TO PATIENT - REJECTED
-            // ============================================
-            $rejection_reason = substr($notes, 0, 80);
-            $sms_message = "PF3 SYS: Mteja " . $patient['full_name'] . ", maombi yako #$pf3 yamekataliwa. Sababu: $rejection_reason. Wasiliana na polisi. Asante!";
-            if (strlen($sms_message) > 159) {
-                $sms_message = "PF3 SYS: Maombi #$pf3 yamekataliwa. Wasiliana na polisi. Asante!";
-            }
-            $sms_result = sendSMS($patient['phone'], $sms_message);
-            
-            if ($sms_result['success']) {
-                error_log("SMS SENT to patient {$patient['phone']} - REJECTED");
-            } else {
-                error_log("SMS FAILED to patient {$patient['phone']}: " . $sms_result['message']);
-            }
-            
-            // ============================================
-            // CREATE NOTIFICATION
-            // ============================================
-            $stmt = $pdo->prepare("INSERT INTO notifications (pf3_number, message, type) VALUES (?, ?, 'REJECTION')");
-            $stmt->execute([$pf3, "Case PF3: $pf3 has been REJECTED. Reason: " . substr($notes, 0, 200)]);
-            
-            // ============================================
-            // LOG AUDIT
-            // ============================================
-            logAudit($_SESSION['user_id'], 'police', 'Case Rejected', "PF3: $pf3, Reason: " . substr($notes, 0, 50));
-            
-            $_SESSION['error_message'] = "❌ Case rejected successfully. SMS sent to patient.";
-            header('Location: cases.php?status=REJECTED');
-            exit;
-        }
-        
-        // ============================================
-        // INVALID DECISION
-        // ============================================
-        else {
-            $_SESSION['error_message'] = "Invalid decision! Please select Approve or Reject.";
-            header('Location: view_case.php?pf3=' . $pf3);
-            exit;
-        }
-        
-    } catch (PDOException $e) {
-        error_log("PDOException in process_case: " . $e->getMessage());
-        error_log("Stack trace: " . $e->getTraceAsString());
-        $_SESSION['error_message'] = "Database error: " . $e->getMessage();
-        header('Location: view_case.php?pf3=' . $pf3);
-        exit;
-    } catch (Exception $e) {
-        error_log("Exception in process_case: " . $e->getMessage());
-        $_SESSION['error_message'] = "An error occurred: " . $e->getMessage();
-        header('Location: view_case.php?pf3=' . $pf3);
-        exit;
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    
+    // Verify the update was successful
+    if ($stmt->rowCount() === 0) {
+        throw new Exception("Failed to update case status. Please try again.");
     }
     
-} else {
-    // Not POST request
-    header('Location: dashboard.php');
+    // ============================================================
+    // STEP 3: Log the action in audit_logs
+    // ============================================================
+    $action_log = $action === 'approve' ? "Approved Case - Status changed to APPROVED" : "Rejected Case - Status changed to REJECTED";
+    $details = "PF3: $pf3_number, Patient: {$case['full_name']}, " . 
+               ($action === 'approve' ? "RB: $rb_number" : "Reason: $police_notes") .
+               " | Status updated from PENDING to " . strtoupper($action);
+    
+    logAudit($_SESSION['user_id'], 'police', $action_log, $details);
+    
+    // ============================================================
+    // STEP 4: Add notification to notifications table
+    // ============================================================
+    $notification_message = $action === 'approve' 
+        ? "Your PF3 application #$pf3_number has been APPROVED. RB Number: $rb_number. Please proceed to the hospital for medical examination."
+        : "Your PF3 application #$pf3_number has been REJECTED. Reason: $police_notes. Please contact the police station for more information.";
+    
+    $stmt = $pdo->prepare("
+        INSERT INTO notifications (pf3_number, message, type, created_at) 
+        VALUES (?, ?, ?, NOW())
+    ");
+    $stmt->execute([$pf3_number, $notification_message, $new_status]);
+    
+    // ============================================================
+    // STEP 5: Send SMS notification to patient
+    // ============================================================
+    $patient_phone = $case['phone'];
+    $patient_name = $case['full_name'];
+    
+    // Send SMS using the helper function
+    $sms_result = sendPF3StatusUpdateSMS(
+        $patient_phone,
+        $patient_name,
+        $pf3_number,
+        $new_status,
+        $police_notes,
+        $action === 'approve' ? $rb_number : ''
+    );
+    
+    // Log SMS result
+    if ($sms_result['success']) {
+        error_log("SMS sent successfully to $patient_phone for PF3 $pf3_number - Status: $new_status");
+        
+        // Add SMS notification
+        $stmt = $pdo->prepare("
+            INSERT INTO notifications (pf3_number, message, type, created_at) 
+            VALUES (?, ?, ?, NOW())
+        ");
+        $stmt->execute([
+            $pf3_number,
+            "SMS sent to patient: " . $patient_phone . " - Status: $new_status",
+            'SMS'
+        ]);
+    } else {
+        error_log("SMS FAILED for PF3 $pf3_number: " . $sms_result['message']);
+        
+        // Log failed SMS
+        $stmt = $pdo->prepare("
+            INSERT INTO notifications (pf3_number, message, type, created_at) 
+            VALUES (?, ?, ?, NOW())
+        ");
+        $stmt->execute([
+            $pf3_number,
+            "SMS failed to send to $patient_phone: " . $sms_result['message'],
+            'ERROR'
+        ]);
+    }
+    
+    // ============================================================
+    // STEP 6: Send SMS to guardian if phone exists
+    // ============================================================
+    if (!empty($case['guardian_phone']) && $case['guardian_phone'] !== $patient_phone) {
+        $guardian_phone = cleanPhoneNumber($case['guardian_phone']);
+        
+        if ($action === 'approve') {
+            $guardian_message = "PF3 SYS: Mlezi wa {$case['full_name']}, maombi #$pf3_number yamekubaliwa. RB: $rb_number. Mlezi anapaswa kuandamana na mgonjwa hospitalini.";
+        } else {
+            $guardian_message = "PF3 SYS: Mlezi wa {$case['full_name']}, maombi #$pf3_number yamekataliwa. Wasiliana na polisi kwa maelezo.";
+        }
+        
+        // Shorten guardian message if needed
+        if (strlen($guardian_message) > 159) {
+            $guardian_message = $action === 'approve'
+                ? "PF3 SYS: Mlezi wa {$case['full_name']}, maombi #$pf3_number yamekubaliwa. RB: $rb_number."
+                : "PF3 SYS: Mlezi wa {$case['full_name']}, maombi #$pf3_number yamekataliwa.";
+        }
+        
+        $guardian_sms = sendSMS($guardian_phone, $guardian_message);
+        if ($guardian_sms['success']) {
+            error_log("Guardian SMS sent to $guardian_phone for PF3 $pf3_number");
+            
+            // Log guardian SMS
+            $stmt = $pdo->prepare("
+                INSERT INTO notifications (pf3_number, message, type, created_at) 
+                VALUES (?, ?, ?, NOW())
+            ");
+            $stmt->execute([
+                $pf3_number,
+                "Guardian SMS sent to: " . $guardian_phone,
+                'SMS'
+            ]);
+        }
+    }
+    
+    // ============================================================
+    // STEP 7: Commit transaction
+    // ============================================================
+    $pdo->commit();
+    
+    // ============================================================
+    // STEP 8: Set success message and redirect
+    // ============================================================
+    $action_display = $action === 'approve' ? 'APPROVED' : 'REJECTED';
+    $success_msg = "Case #$pf3_number has been " . strtoupper($action) . " successfully!";
+    
+    if ($sms_result['success']) {
+        $success_msg .= " SMS sent to patient.";
+    } else {
+        $success_msg .= " SMS could not be sent: " . $sms_result['message'];
+    }
+    
+    $_SESSION['success_message'] = $success_msg;
+    header('Location: view_case.php?pf3=' . $pf3_number);
+    exit;
+    
+} catch (Exception $e) {
+    // ============================================================
+    // ERROR HANDLING - Rollback transaction
+    // ============================================================
+    $pdo->rollBack();
+    
+    error_log("Process Case Error: " . $e->getMessage());
+    $_SESSION['error_message'] = "Error: " . $e->getMessage();
+    header('Location: view_case.php?pf3=' . $pf3_number);
+    exit;
+    
+} catch (PDOException $e) {
+    // ============================================================
+    // DATABASE ERROR - Rollback transaction
+    // ============================================================
+    $pdo->rollBack();
+    
+    error_log("Database Error: " . $e->getMessage());
+    $_SESSION['error_message'] = "Database error: " . $e->getMessage();
+    header('Location: view_case.php?pf3=' . $pf3_number);
     exit;
 }
 ?>
