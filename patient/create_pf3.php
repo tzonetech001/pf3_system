@@ -42,7 +42,9 @@
                         <h4 id="step1-header">Step 1: Basic Information</h4>
                     </div>
                     <div class="card-body">
-                        <?php if (isset($_SESSION['error_message'])): ?>
+                        <?php 
+                        session_start();
+                        if (isset($_SESSION['error_message'])): ?>
                             <div class="alert alert-danger alert-dismissible fade show">
                                 <?php echo $_SESSION['error_message']; ?>
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -80,7 +82,7 @@
                                            minlength="9" maxlength="9"
                                            pattern="[67][0-9]{8}">
                                 </div>
-                                <div class="form-text" id="phone-hint"></div>
+                                <div class="form-text" id="phone-hint">Enter 9 digits after 255 (e.g., 7XXXXXXXX or 6XXXXXXXX)</div>
                                 <div id="phone-error" class="text-danger" style="display: none;">Please enter a valid phone number (9 digits starting with 6 or 7)</div>
                             </div>
                             <div class="mb-3">
@@ -92,7 +94,7 @@
                                            minlength="9" maxlength="9"
                                            pattern="[67][0-9]{8}">
                                 </div>
-                                <div class="form-text" id="guardian-phone-hint"></div>
+                                <div class="form-text" id="guardian-phone-hint">Optional: Enter 9 digits after 255 (e.g., 7XXXXXXXX or 6XXXXXXXX)</div>
                                 <div id="guardian-phone-error" class="text-danger" style="display: none;">Please enter a valid phone number (9 digits starting with 6 or 7)</div>
                             </div>
                             <div class="mb-3">
@@ -136,6 +138,7 @@
             if (!isRequired && value === '') {
                 errorElement.style.display = 'none';
                 input.classList.remove('is-invalid');
+                input.classList.remove('is-valid');
                 return true;
             }
             
@@ -176,6 +179,7 @@
             } else {
                 guardianError.style.display = 'none';
                 guardianInput.classList.remove('is-invalid');
+                guardianInput.classList.remove('is-valid');
             }
             
             if (!isValid) {
@@ -243,7 +247,10 @@
                 phone: 'Phone Number',
                 guardianPhone: 'Guardian Phone Number',
                 incidentDate: 'Date and Time of Incident',
+                incidentDateHint: 'Current date and time is set by default. You cannot change it.',
                 saveContinue: 'Save & Continue',
+                phoneHint: 'Enter 9 digits after 255 (e.g., 7XXXXXXXX or 6XXXXXXXX)',
+                guardianPhoneHint: 'Optional: Enter 9 digits after 255 (e.g., 7XXXXXXXX or 6XXXXXXXX)',
                 phoneError: 'Please enter a valid phone number (9 digits starting with 6 or 7)',
                 home: 'Home',
                 login: 'Login'
@@ -257,7 +264,10 @@
                 phone: 'Nambari ya Simu',
                 guardianPhone: 'Nambari ya Simu ya Mlezi',
                 incidentDate: 'Tarehe na Wakati wa Tukio',
+                incidentDateHint: 'Tarehe na wakati wa sasa imewekwa. Huwezi kuibadilisha.',
                 saveContinue: 'Hifadhi na Endelea',
+                phoneHint: 'Weka tarakimu 9 baada ya 255 (mfano: 7XXXXXXXX au 6XXXXXXXX)',
+                guardianPhoneHint: 'Hiari: Weka tarakimu 9 baada ya 255 (mfano: 7XXXXXXXX au 6XXXXXXXX)',
                 phoneError: 'Tafadhali weka nambari sahihi ya simu (tarakimu 9 zinazoanza na 6 au 7)',
                 home: 'Nyumbani',
                 login: 'Ingia'
@@ -272,21 +282,50 @@
             
             const translations_lang = translations[lang];
             
-            document.querySelector('h4').textContent = translations_lang.step1;
-            document.getElementById('label-full-name').textContent = translations_lang.fullName + ' *';
-            document.getElementById('label-gender').textContent = translations_lang.gender + ' *';
-            document.getElementById('label-age').textContent = translations_lang.age + ' *';
-            document.getElementById('label-address').textContent = translations_lang.address + ' *';
-            document.getElementById('label-phone').textContent = translations_lang.phone + ' *';
-            document.getElementById('label-guardian-phone').textContent = translations_lang.guardianPhone;
-            document.getElementById('label-incident-date').textContent = translations_lang.incidentDate + ' *';
-            document.getElementById('incident-date-hint').textContent = translations_lang.incidentDateHint;
-            document.getElementById('btn-save-continue').textContent = translations_lang.saveContinue;
-            document.getElementById('phone-hint').textContent = translations_lang.phoneHint;
-            document.getElementById('guardian-phone-hint').textContent = translations_lang.guardianPhoneHint;
-            document.getElementById('phone-error').textContent = translations_lang.phoneError;
-            document.getElementById('nav-home').textContent = translations_lang.home;
-            document.getElementById('nav-login').textContent = translations_lang.login;
+            const step1Header = document.getElementById('step1-header');
+            if (step1Header) step1Header.textContent = translations_lang.step1;
+            
+            const labelFullName = document.getElementById('label-full-name');
+            if (labelFullName) labelFullName.textContent = translations_lang.fullName + ' *';
+            
+            const labelGender = document.getElementById('label-gender');
+            if (labelGender) labelGender.textContent = translations_lang.gender + ' *';
+            
+            const labelAge = document.getElementById('label-age');
+            if (labelAge) labelAge.textContent = translations_lang.age + ' *';
+            
+            const labelAddress = document.getElementById('label-address');
+            if (labelAddress) labelAddress.textContent = translations_lang.address + ' *';
+            
+            const labelPhone = document.getElementById('label-phone');
+            if (labelPhone) labelPhone.textContent = translations_lang.phone + ' *';
+            
+            const labelGuardianPhone = document.getElementById('label-guardian-phone');
+            if (labelGuardianPhone) labelGuardianPhone.textContent = translations_lang.guardianPhone;
+            
+            const labelIncidentDate = document.getElementById('label-incident-date');
+            if (labelIncidentDate) labelIncidentDate.textContent = translations_lang.incidentDate + ' *';
+            
+            const incidentDateHint = document.getElementById('incident-date-hint');
+            if (incidentDateHint) incidentDateHint.textContent = translations_lang.incidentDateHint;
+            
+            const btnSaveContinue = document.getElementById('btn-save-continue');
+            if (btnSaveContinue) btnSaveContinue.textContent = translations_lang.saveContinue;
+            
+            const phoneHint = document.getElementById('phone-hint');
+            if (phoneHint) phoneHint.textContent = translations_lang.phoneHint;
+            
+            const guardianPhoneHint = document.getElementById('guardian-phone-hint');
+            if (guardianPhoneHint) guardianPhoneHint.textContent = translations_lang.guardianPhoneHint;
+            
+            const phoneError = document.getElementById('phone-error');
+            if (phoneError) phoneError.textContent = translations_lang.phoneError;
+            
+            const navHome = document.getElementById('nav-home');
+            if (navHome) navHome.textContent = translations_lang.home;
+            
+            const navLogin = document.getElementById('nav-login');
+            if (navLogin) navLogin.textContent = translations_lang.login;
         }
 
         document.addEventListener('DOMContentLoaded', function() {

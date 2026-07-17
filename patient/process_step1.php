@@ -45,8 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // Convert phone numbers to international format (255 + 9 digits)
-    // Remove any leading zeros or 255 prefix if present
+    // Convert phone numbers to international format
     $phone_clean = preg_replace('/^0+/', '', $phone);
     $phone_clean = preg_replace('/^255/', '', $phone_clean);
     $phone_international = '255' . $phone_clean;
@@ -65,14 +64,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$pf3_number]);
     } while ($stmt->fetch());
 
-    // Insert into patients with international phone numbers
+    // Insert into patients
     try {
         $stmt = $pdo->prepare("
             INSERT INTO patients 
             (pf3_number, full_name, gender, age, address, phone, guardian_phone, incident_date_time) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        $stmt->execute([
+        $result = $stmt->execute([
             $pf3_number, 
             $full_name, 
             $gender, 
@@ -83,18 +82,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $incident_date_time
         ]);
 
-        // Store PF3 in session for next step
-        $_SESSION['pf3_number'] = $pf3_number;
-
-        // Log activity
-        logAudit(null, 'patient', 'PF3 Created', "PF3 Number: $pf3_number, Patient: $full_name");
-
-        header('Location: step2.php');
-        exit;
+        if ($result) {
+            // Store PF3 in session for next step
+            $_SESSION['pf3_number'] = $pf3_number;
+            
+            // Redirect to step2.php
+            header('Location: step2.php');
+            exit;
+        } else {
+            $_SESSION['error_message'] = "Failed to save patient information.";
+            header('Location: create_pf3.php');
+            exit;
+        }
 
     } catch (PDOException $e) {
         error_log("Process step1 error: " . $e->getMessage());
-        $_SESSION['error_message'] = "An error occurred while saving patient information. Please try again.";
+        $_SESSION['error_message'] = "Database error: " . $e->getMessage();
         header('Location: create_pf3.php');
         exit;
     }
