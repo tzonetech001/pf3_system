@@ -760,16 +760,23 @@ include 'header.php';
                             <input type="email" class="form-control" name="email" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Phone <span class="text-danger">*</span></label>
-                            <input type="tel" class="form-control" name="phone" required>
+                            <label class="form-label">Phone Number <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">255</span>
+                                <input type="tel" class="form-control" name="phone" 
+                                       placeholder="7XXXXXXXX or 6XXXXXXXX" required
+                                       minlength="9" maxlength="9"
+                                       pattern="[67][0-9]{8}">
+                            </div>
+                            <div class="form-text">Enter 9 digits after 255 (e.g., 7XXXXXXXX or 6XXXXXXXX)</div>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Password <span class="text-danger">*</span></label>
-                            <input type="password" class="form-control" id="doctor_password" name="password" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
-                            <input type="password" class="form-control" id="doctor_confirm_password" required>
+                        <div class="col-md-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Default password is: <strong>123456</strong>
+                            </div>
+                            <input type="hidden" name="password" value="123456">
+                            <input type="hidden" name="confirm_password" value="123456">
                         </div>
                     </div>
                 </div>
@@ -822,16 +829,23 @@ include 'header.php';
                             <input type="email" class="form-control" name="email" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Phone <span class="text-danger">*</span></label>
-                            <input type="tel" class="form-control" name="phone" required>
+                            <label class="form-label">Phone Number <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">255</span>
+                                <input type="tel" class="form-control" name="phone" 
+                                       placeholder="7XXXXXXXX or 6XXXXXXXX" required
+                                       minlength="9" maxlength="9"
+                                       pattern="[67][0-9]{8}">
+                            </div>
+                            <div class="form-text">Enter 9 digits after 255 (e.g., 7XXXXXXXX or 6XXXXXXXX)</div>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Password <span class="text-danger">*</span></label>
-                            <input type="password" class="form-control" id="police_password" name="password" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
-                            <input type="password" class="form-control" id="police_confirm_password" required>
+                        <div class="col-md-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Default password is: <strong>123456</strong>
+                            </div>
+                            <input type="hidden" name="password" value="123456">
+                            <input type="hidden" name="confirm_password" value="123456">
                         </div>
                     </div>
                 </div>
@@ -982,35 +996,13 @@ function validateResetPassword() {
     return confirm('Are you sure you want to reset the password? The user will need to use the new password.');
 }
 
-// Validate doctor registration
+// Validate doctor registration - now always returns true because password is hidden
 function validateDoctorForm() {
-    const password = document.getElementById('doctor_password').value;
-    const confirm = document.getElementById('doctor_confirm_password').value;
-    
-    if (password.length < 6) {
-        alert('Password must be at least 6 characters');
-        return false;
-    }
-    if (password !== confirm) {
-        alert('Passwords do not match');
-        return false;
-    }
     return true;
 }
 
-// Validate police registration
+// Validate police registration - now always returns true because password is hidden
 function validatePoliceForm() {
-    const password = document.getElementById('police_password').value;
-    const confirm = document.getElementById('police_confirm_password').value;
-    
-    if (password.length < 6) {
-        alert('Password must be at least 6 characters');
-        return false;
-    }
-    if (password !== confirm) {
-        alert('Passwords do not match');
-        return false;
-    }
     return true;
 }
 

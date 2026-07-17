@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../includes/db.php';
+require_once '../includes/sms_helper.php';
 
 // Set Tanzania timezone
 date_default_timezone_set('Africa/Dar_es_Salaam');
@@ -57,6 +58,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $guardian_phone_international = '255' . $guardian_clean;
     }
 
+    // ============================================
+    // CHECK IF PHONE NUMBER ALREADY EXISTS
+    // ============================================
+    $stmt = $pdo->prepare("SELECT pf3_number, full_name, last_application_date, created_at FROM patients WHERE phone = ? ORDER BY created_at DESC LIMIT 1");
+    $stmt->execute([$phone_international]);
+    $existing_patient = $stmt->fetch();
+
+    if ($existing_patient) {
+        // Check if 2 days (48 hours) have passed since last application
+        $last_application = strtotime($existing_patient['last_application_date'] ?? $existing_patient['created_at']);
+        $current_time = time();
+        $hours_diff = ($current_time - $last_application) / 3600;
+        
+        // If less than 48 hours (2 days), prevent new application
+        if ($hours_diff < 48) {
+            $hours_remaining = ceil(48 - $hours_diff);
+            $message = "Dear " . $existing_patient['full_name'] . ", you already have an active PF3 application #" . $existing_patient['pf3_number'] . ". Please wait " . $hours_remaining . " hour(s) before applying again. Thank you!";
+            
+            // Send SMS reminder with existing PF3 number
+            $sms_result = sendSMS($phone_international, $message);
+            
+            if ($sms_result['success']) {
+                error_log("SMS sent to $phone_international: Existing PF3 #" . $existing_patient['pf3_number']);
+            } else {
+                error_log("SMS failed to $phone_international: " . $sms_result['message']);
+            }
+            
+            // Store message in session for display
+            $_SESSION['error_message'] = "You already have an active PF3 application (#" . $existing_patient['pf3_number'] . "). Please wait " . $hours_remaining . " hour(s) before applying again. A reminder has been sent to your phone.";
+            header('Location: create_pf3.php');
+            exit;
+        }
+    }
+
     // Generate unique PF3 number
     do {
         $pf3_number = generatePF3Number();
@@ -68,8 +103,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $stmt = $pdo->prepare("
             INSERT INTO patients 
-            (pf3_number, full_name, gender, age, address, phone, guardian_phone, incident_date_time) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            (pf3_number, full_name, gender, age, address, phone, guardian_phone, incident_date_time, last_application_date) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
         ");
         $result = $stmt->execute([
             $pf3_number, 
@@ -85,6 +120,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($result) {
             // Store PF3 in session for next step
             $_SESSION['pf3_number'] = $pf3_number;
+            
+            // ============================================
+            // SEND SMS TO PATIENT ONLY (MTOA TAARIFA)
+            // ============================================
+            $sms_result = sendPF3ApplicationSMS(
+                $phone_international, 
+                $full_name, 
+                $pf3_number
+            );
+            
+            // Log SMS result
+            if ($sms_result['success']) {
+                error_log("SMS SENT to patient $phone_international for PF3 $pf3_number");
+            } else {
+                error_log("SMS FAILED to patient $phone_international for PF3 $pf3_number: " . $sms_result['message']);
+            }
             
             // Redirect to step2.php
             header('Location: step2.php');

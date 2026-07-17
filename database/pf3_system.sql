@@ -113,3 +113,6 @@ ALTER TABLE police_officers ADD COLUMN status ENUM('active', 'inactive') DEFAULT
 
 -- Add status column to admins table
 ALTER TABLE admins ADD COLUMN status ENUM('active', 'inactive') DEFAULT 'active';
+
+-- Add last_application_date column to patients table
+ALTER TABLE patients ADD COLUMN last_application_date DATETIME DEFAULT CURRENT_TIMESTAMP;
