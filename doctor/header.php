@@ -390,14 +390,6 @@ if (!isset($_SESSION['user_id'])) {
                 <i class="fas fa-user-circle"></i>
                 <span>My Profile</span>
             </a>
-            <a href="profile.php#password" class="menu-item">
-                <i class="fas fa-key"></i>
-                <span>Change Password</span>
-            </a>
-            <a href="profile.php#activity" class="menu-item">
-                <i class="fas fa-history"></i>
-                <span>Activity Log</span>
-            </a>
             <a href="../logout.php" class="menu-item" style="color: #A6EDCF ;">
                 <i class="fas fa-sign-out-alt"></i>
                 <span>Logout</span>
