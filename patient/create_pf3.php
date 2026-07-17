@@ -82,7 +82,7 @@
                                            minlength="9" maxlength="9"
                                            pattern="[67][0-9]{8}">
                                 </div>
-                                <div class="form-text" id="phone-hint">Enter 9 digits after 255 (e.g., 7XXXXXXXX or 6XXXXXXXX)</div>
+                                <div class="form-text" id="phone-hint"></div>
                                 <div id="phone-error" class="text-danger" style="display: none;">Please enter a valid phone number (9 digits starting with 6 or 7)</div>
                             </div>
                             <div class="mb-3">
@@ -94,7 +94,7 @@
                                            minlength="9" maxlength="9"
                                            pattern="[67][0-9]{8}">
                                 </div>
-                                <div class="form-text" id="guardian-phone-hint">Optional: Enter 9 digits after 255 (e.g., 7XXXXXXXX or 6XXXXXXXX)</div>
+                                <div class="form-text" id="guardian-phone-hint"></div>
                                 <div id="guardian-phone-error" class="text-danger" style="display: none;">Please enter a valid phone number (9 digits starting with 6 or 7)</div>
                             </div>
                             <div class="mb-3">
@@ -247,10 +247,7 @@
                 phone: 'Phone Number',
                 guardianPhone: 'Guardian Phone Number',
                 incidentDate: 'Date and Time of Incident',
-                incidentDateHint: 'Current date and time is set by default. You cannot change it.',
                 saveContinue: 'Save & Continue',
-                phoneHint: 'Enter 9 digits after 255 (e.g., 7XXXXXXXX or 6XXXXXXXX)',
-                guardianPhoneHint: 'Optional: Enter 9 digits after 255 (e.g., 7XXXXXXXX or 6XXXXXXXX)',
                 phoneError: 'Please enter a valid phone number (9 digits starting with 6 or 7)',
                 home: 'Home',
                 login: 'Login'
@@ -264,10 +261,7 @@
                 phone: 'Nambari ya Simu',
                 guardianPhone: 'Nambari ya Simu ya Mlezi',
                 incidentDate: 'Tarehe na Wakati wa Tukio',
-                incidentDateHint: 'Tarehe na wakati wa sasa imewekwa. Huwezi kuibadilisha.',
                 saveContinue: 'Hifadhi na Endelea',
-                phoneHint: 'Weka tarakimu 9 baada ya 255 (mfano: 7XXXXXXXX au 6XXXXXXXX)',
-                guardianPhoneHint: 'Hiari: Weka tarakimu 9 baada ya 255 (mfano: 7XXXXXXXX au 6XXXXXXXX)',
                 phoneError: 'Tafadhali weka nambari sahihi ya simu (tarakimu 9 zinazoanza na 6 au 7)',
                 home: 'Nyumbani',
                 login: 'Ingia'
