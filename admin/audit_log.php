@@ -3,6 +3,49 @@ session_start();
 require_once '../includes/db.php';
 requireLogin('admin');
 
+// Handle Bulk Delete
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Handle Clear All
+    if (isset($_POST['clear_all']) && $_POST['clear_all'] === 'yes') {
+        try {
+            $pdo->query("TRUNCATE TABLE audit_logs");
+            $_SESSION['success_message'] = "All audit logs have been cleared successfully!";
+            logAudit($_SESSION['user_id'], 'admin', 'Cleared All Audit Logs', "All audit logs were cleared");
+            header('Location: audit_log.php');
+            exit;
+        } catch (PDOException $e) {
+            $_SESSION['error_message'] = "Error clearing audit logs: " . $e->getMessage();
+            header('Location: audit_log.php');
+            exit;
+        }
+    }
+    
+    // Handle Bulk Delete
+    if (isset($_POST['bulk_delete']) && isset($_POST['selected_ids']) && is_array($_POST['selected_ids'])) {
+        $selected_ids = array_filter($_POST['selected_ids'], 'is_numeric');
+        if (!empty($selected_ids)) {
+            try {
+                $placeholders = implode(',', array_fill(0, count($selected_ids), '?'));
+                $stmt = $pdo->prepare("DELETE FROM audit_logs WHERE id IN ($placeholders)");
+                $stmt->execute($selected_ids);
+                $deleted_count = $stmt->rowCount();
+                $_SESSION['success_message'] = "Successfully deleted $deleted_count audit log(s)!";
+                logAudit($_SESSION['user_id'], 'admin', 'Bulk Deleted Audit Logs', "Deleted $deleted_count audit log entries");
+                header('Location: audit_log.php');
+                exit;
+            } catch (PDOException $e) {
+                $_SESSION['error_message'] = "Error deleting audit logs: " . $e->getMessage();
+                header('Location: audit_log.php');
+                exit;
+            }
+        } else {
+            $_SESSION['error_message'] = "No valid audit logs selected for deletion.";
+            header('Location: audit_log.php');
+            exit;
+        }
+    }
+}
+
 // Pagination
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 20;
@@ -92,6 +135,87 @@ include 'header.php';
         transform: translateY(-2px);
         box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
+    
+    .bulk-actions-bar {
+        background: #f8f9fa;
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        display: none;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .bulk-actions-bar.active {
+        display: flex;
+    }
+    
+    .bulk-actions-bar .selected-count {
+        font-weight: 600;
+        color: #166534;
+    }
+    
+    .bulk-delete-btn {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 0.4rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .bulk-delete-btn:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+    }
+    
+    .clear-all-btn {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 0.4rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .clear-all-btn:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+    }
+    
+    .select-all-checkbox {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+    
+    .row-checkbox {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+    
+    .action-buttons-group {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    @media (max-width: 768px) {
+        .bulk-actions-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .bulk-actions-bar .d-flex {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+    }
 </style>
 
 <div class="page-header d-flex justify-content-between align-items-center flex-wrap">
@@ -108,6 +232,20 @@ include 'header.php';
         </button>
     </div>
 </div>
+
+<?php if (isset($_SESSION['success_message'])): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i> <?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+<?php if (isset($_SESSION['error_message'])): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i> <?php echo $_SESSION['error_message']; unset($_SESSION['error_message']); ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
 
 <!-- Filter Section -->
 <div class="card table-card mb-4">
@@ -134,12 +272,45 @@ include 'header.php';
     </div>
 </div>
 
+<!-- Bulk Actions Bar -->
+<div class="bulk-actions-bar" id="bulkActionsBar">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+        <span class="selected-count">
+            <i class="fas fa-check-circle me-1"></i>
+            <span id="selectedCount">0</span> log(s) selected
+        </span>
+        <button class="bulk-delete-btn" onclick="confirmBulkDelete()">
+            <i class="fas fa-trash me-1"></i> Delete Selected
+        </button>
+        <button class="clear-all-btn" onclick="confirmClearAll()">
+            <i class="fas fa-eraser me-1"></i> Clear All Logs
+        </button>
+        <button class="btn btn-sm btn-secondary" onclick="deselectAll()">
+            <i class="fas fa-times"></i> Deselect All
+        </button>
+    </div>
+</div>
+
+<!-- Bulk Delete Form -->
+<form id="bulkDeleteForm" method="POST" action="">
+    <input type="hidden" name="bulk_delete" value="1">
+    <div id="selectedIdsContainer"></div>
+</form>
+
+<!-- Clear All Form -->
+<form id="clearAllForm" method="POST" action="">
+    <input type="hidden" name="clear_all" value="yes">
+</form>
+
 <div class="card table-card">
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover mb-0" id="auditTable">
                 <thead class="table-light">
                     <tr>
+                        <th style="width: 40px;">
+                            <input type="checkbox" class="select-all-checkbox" id="selectAll" onchange="toggleAllCheckboxes()">
+                        </th>
                         <th>ID</th>
                         <th>Action</th>
                         <th>User Type</th>
@@ -152,6 +323,9 @@ include 'header.php';
                     <?php if (count($logs) > 0): ?>
                         <?php foreach ($logs as $log): ?>
                         <tr>
+                            <td>
+                                <input type="checkbox" class="row-checkbox" data-id="<?php echo $log['id']; ?>" onchange="updateBulkActions()">
+                            </td>
                             <td>#<?php echo $log['id']; ?></td>
                             <td>
                                 <span class="badge-action badge bg-<?php 
@@ -161,6 +335,7 @@ include 'header.php';
                                     elseif (strpos($log['action'], 'Deleted') !== false) echo 'dark';
                                     elseif (strpos($log['action'], 'Updated') !== false) echo 'warning';
                                     elseif (strpos($log['action'], 'Login') !== false) echo 'primary';
+                                    elseif (strpos($log['action'], 'Cleared') !== false) echo 'danger';
                                     else echo 'secondary';
                                 ?> text-white">
                                     <?php echo htmlspecialchars($log['action']); ?>
@@ -184,7 +359,7 @@ include 'header.php';
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="6" class="text-center py-4">
+                            <td colspan="7" class="text-center py-4">
                                 <i class="fas fa-history fa-2x text-muted mb-2 d-block"></i>
                                 No audit logs found
                             </td>
@@ -243,6 +418,7 @@ include 'header.php';
 <?php endif; ?>
 
 <script>
+// Filter table function
 function filterTable() {
     const searchInput = document.getElementById('searchInput').value.toLowerCase();
     const userTypeFilter = document.getElementById('userTypeFilter').value.toLowerCase();
@@ -252,10 +428,13 @@ function filterTable() {
     const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
     
     for (let row of rows) {
-        let action = row.cells[1]?.innerText.toLowerCase() || '';
-        let userType = row.cells[2]?.innerText.toLowerCase() || '';
-        let details = row.cells[4]?.innerText.toLowerCase() || '';
-        let date = row.cells[5]?.innerText.split(' ')[0] || '';
+        // Skip if row has no cells (empty state row)
+        if (row.cells.length < 7) continue;
+        
+        let action = row.cells[2]?.innerText.toLowerCase() || '';
+        let userType = row.cells[3]?.innerText.toLowerCase() || '';
+        let details = row.cells[5]?.innerText.toLowerCase() || '';
+        let date = row.cells[6]?.innerText.split(' ')[0] || '';
         
         let matchesSearch = searchInput === '' || action.includes(searchInput) || details.includes(searchInput);
         let matchesType = userTypeFilter === '' || userType.includes(userTypeFilter);
@@ -265,10 +444,17 @@ function filterTable() {
             row.style.display = '';
         } else {
             row.style.display = 'none';
+            // Uncheck hidden rows
+            const checkbox = row.querySelector('.row-checkbox');
+            if (checkbox) {
+                checkbox.checked = false;
+            }
         }
     }
+    updateBulkActions();
 }
 
+// Clear filters function
 function clearFilters() {
     document.getElementById('searchInput').value = '';
     document.getElementById('userTypeFilter').value = '';
@@ -276,6 +462,89 @@ function clearFilters() {
     filterTable();
 }
 
+// Toggle all checkboxes
+function toggleAllCheckboxes() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.row-checkbox');
+    const visibleCheckboxes = Array.from(checkboxes).filter(cb => {
+        const row = cb.closest('tr');
+        return row.style.display !== 'none';
+    });
+    
+    visibleCheckboxes.forEach(cb => {
+        cb.checked = selectAll.checked;
+    });
+    updateBulkActions();
+}
+
+// Update bulk actions bar
+function updateBulkActions() {
+    const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+    const selectedIds = Array.from(checkboxes).map(cb => cb.dataset.id);
+    const count = selectedIds.length;
+    
+    const bulkBar = document.getElementById('bulkActionsBar');
+    const selectedCount = document.getElementById('selectedCount');
+    
+    if (count > 0) {
+        bulkBar.classList.add('active');
+        selectedCount.textContent = count;
+    } else {
+        bulkBar.classList.remove('active');
+    }
+    
+    // Update hidden inputs for bulk delete
+    const container = document.getElementById('selectedIdsContainer');
+    container.innerHTML = '';
+    selectedIds.forEach(id => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'selected_ids[]';
+        input.value = id;
+        container.appendChild(input);
+    });
+}
+
+// Confirm bulk delete
+function confirmBulkDelete() {
+    const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+    const count = checkboxes.length;
+    
+    if (count === 0) {
+        alert('Please select at least one audit log to delete.');
+        return;
+    }
+    
+    if (confirm(`Are you sure you want to delete ${count} selected audit log(s)? This action cannot be undone.`)) {
+        document.getElementById('bulkDeleteForm').submit();
+    }
+}
+
+// Confirm clear all
+function confirmClearAll() {
+    const totalRecords = <?php echo $total; ?>;
+    if (totalRecords === 0) {
+        alert('There are no audit logs to clear.');
+        return;
+    }
+    
+    if (confirm(`⚠️ WARNING: You are about to delete ALL ${totalRecords} audit logs. This action cannot be undone!\n\nAre you sure you want to continue?`)) {
+        if (confirm('FINAL CONFIRMATION: This will permanently delete all audit logs. Proceed?')) {
+            document.getElementById('clearAllForm').submit();
+        }
+    }
+}
+
+// Deselect all
+function deselectAll() {
+    document.querySelectorAll('.row-checkbox').forEach(cb => {
+        cb.checked = false;
+    });
+    document.getElementById('selectAll').checked = false;
+    updateBulkActions();
+}
+
+// Export to CSV function
 function exportToCSV() {
     const table = document.getElementById('auditTable');
     const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
@@ -286,9 +555,10 @@ function exportToCSV() {
     
     // Data
     for (let row of rows) {
-        if (row.style.display !== 'none') {
+        if (row.style.display !== 'none' && row.cells.length >= 7) {
             let rowData = [];
-            for (let i = 0; i < row.cells.length; i++) {
+            // Skip checkbox column (index 0), get data from index 1 to 6
+            for (let i = 1; i < 7; i++) {
                 let cellText = row.cells[i].innerText.replace(/,/g, ';');
                 rowData.push('"' + cellText + '"');
             }

@@ -74,7 +74,7 @@ function validatePhoneNumber($phone) {
 }
 
 /**
- * Send SMS using Beem API
+ * Send SMS using Beem API - SIMPLE VERSION (NO EMOJIS, NO SPECIAL CHARS)
  * @param string $phone Recipient phone number
  * @param string $message SMS message (max 155 characters)
  * @return array Response data
@@ -93,15 +93,42 @@ function sendSMS($phone, $message) {
         return ['success' => false, 'message' => 'Invalid phone number: ' . $phone];
     }
     
-    // Limit message to 155 characters (max allowed)
+    // ============================================================
+    // CRITICAL: Remove ALL emojis and special characters
+    // Beem API only accepts plain text (ASCII)
+    // ============================================================
+    // Remove emojis (✅, ❌, 📱, etc.)
+    $message = preg_replace('/[\x{1F600}-\x{1F64F}]/u', '', $message);
+    $message = preg_replace('/[\x{1F300}-\x{1F5FF}]/u', '', $message);
+    $message = preg_replace('/[\x{1F680}-\x{1F6FF}]/u', '', $message);
+    $message = preg_replace('/[\x{2600}-\x{26FF}]/u', '', $message);
+    $message = preg_replace('/[\x{2700}-\x{27BF}]/u', '', $message);
+    $message = preg_replace('/[\x{1F900}-\x{1F9FF}]/u', '', $message);
+    $message = preg_replace('/[\x{1F700}-\x{1F77F}]/u', '', $message);
+    
+    // Remove other special characters that might cause issues
+    $message = str_replace(['*', '_', '~', '`', '|', '>', '<'], '', $message);
+    
+    // Remove multiple spaces
+    $message = preg_replace('/\s+/', ' ', $message);
+    
+    // Trim
+    $message = trim($message);
+    
+    // Limit message to 155 characters (max allowed by Beem)
     if (strlen($message) > 155) {
-        $message = substr($message, 0, 155);
+        $message = substr($message, 0, 152) . '...';
+    }
+    
+    // If message is empty after cleaning, return error
+    if (empty($message)) {
+        return ['success' => false, 'message' => 'Message is empty after cleaning'];
     }
     
     // Prepare data for Beem API
     $postData = [
         'source_addr' => $sender_id,
-        'encoding' => 0,
+        'encoding' => 0, // 0 = plain text (no Unicode)
         'message' => $message,
         'recipients' => [
             [
@@ -110,6 +137,9 @@ function sendSMS($phone, $message) {
             ]
         ]
     ];
+    
+    // Log the request for debugging
+    error_log("SMS Request - Phone: $phone, Message: $message");
     
     // Send to Beem API
     $ch = curl_init();
@@ -132,21 +162,35 @@ function sendSMS($phone, $message) {
     $curl_error = curl_error($ch);
     curl_close($ch);
     
-    if ($http_code == 200) {
+    // Log response for debugging
+    error_log("SMS Response - HTTP: $http_code, Response: $response");
+    
+    if ($http_code == 200 || $http_code == 201) {
         $result = json_decode($response, true);
         if (isset($result['successful']) && $result['successful']) {
             return ['success' => true, 'message' => 'SMS sent successfully'];
         } else {
-            return ['success' => false, 'message' => $result['message'] ?? 'Unknown error from Beem'];
+            $error_msg = $result['message'] ?? $result['error'] ?? 'Unknown error from Beem';
+            return ['success' => false, 'message' => $error_msg];
         }
     } else {
-        return ['success' => false, 'message' => 'HTTP ' . $http_code . ($curl_error ? ' - ' . $curl_error : '')];
+        // If HTTP 400, try to get more details
+        $error_detail = $response;
+        if ($http_code == 400) {
+            $result = json_decode($response, true);
+            if (isset($result['message'])) {
+                $error_detail = $result['message'];
+            } elseif (isset($result['error'])) {
+                $error_detail = $result['error'];
+            }
+        }
+        return ['success' => false, 'message' => 'HTTP ' . $http_code . ' - ' . $error_detail];
     }
 }
 
 /**
- * Send PF3 Application SMS Notification to Patient ONLY
- * @param string $phone Patient phone number (255 format)
+ * Send PF3 Application SMS Notification - SIMPLE VERSION
+ * @param string $phone Patient phone number
  * @param string $name Patient name
  * @param string $pf3_number PF3 number
  * @return array Response data
@@ -161,28 +205,27 @@ function sendPF3ApplicationSMS($phone, $name, $pf3_number) {
         return ['success' => false, 'message' => 'Invalid phone number: ' . $phone];
     }
     
-    // Get language preference
+    // NO EMOJIS, SIMPLE PLAIN TEXT
     if ($lang === 'sw') {
-        // KISWAHILI MESSAGE - MAX 155 CHARACTERS
+        // KISWAHILI - Max 155 chars
         $message = "PF3 SYS: Mteja $name, maombi #$pf3_number yamewasilishwa. Tumia nambari kufuatilia. Asante!";
         
-        // Ensure message doesn't exceed 155 characters
         if (strlen($message) > 155) {
             $name_short = strlen($name) > 8 ? substr($name, 0, 8) : $name;
-            $message = "PF3 SYS: $name_short, maombi #$pf3_number yamewasilishwa. Tumia nambari kufuatilia. Asante!";
+            $message = "PF3 SYS: $name_short, maombi #$pf3_number yamewasilishwa. Tumia nambari. Asante!";
             if (strlen($message) > 155) {
-                $message = "PF3 SYS: Maombi #$pf3_number yamewasilishwa. Tumia nambari kufuatilia. Asante!";
+                $message = "PF3 SYS: Maombi #$pf3_number yamewasilishwa. Asante!";
             }
         }
     } else {
-        // ENGLISH MESSAGE - MAX 155 CHARACTERS
+        // ENGLISH - Max 155 chars
         $message = "PF3 SYS: Dear $name, application #$pf3_number submitted. Use number to track. Thank you!";
         
         if (strlen($message) > 155) {
             $name_short = strlen($name) > 8 ? substr($name, 0, 8) : $name;
-            $message = "PF3 SYS: Dear $name_short, app #$pf3_number submitted. Use number to track. Thank you!";
+            $message = "PF3 SYS: Dear $name_short, app #$pf3_number submitted. Thank you!";
             if (strlen($message) > 155) {
-                $message = "PF3 SYS: Application #$pf3_number submitted. Use number to track. Thank you!";
+                $message = "PF3 SYS: Application #$pf3_number submitted. Thank you!";
             }
         }
     }
@@ -191,8 +234,8 @@ function sendPF3ApplicationSMS($phone, $name, $pf3_number) {
 }
 
 /**
- * Send PF3 Status Update SMS - APPROVED or REJECTED only
- * @param string $phone Patient phone number (255 format)
+ * Send PF3 Status Update SMS - APPROVED or REJECTED - NO EMOJIS
+ * @param string $phone Patient phone number
  * @param string $name Patient name
  * @param string $pf3_number PF3 number
  * @param string $status New status (APPROVED or REJECTED only)
@@ -210,14 +253,11 @@ function sendPF3StatusUpdateSMS($phone, $name, $pf3_number, $status, $police_not
         return ['success' => false, 'message' => 'Invalid phone number: ' . $phone];
     }
     
-    // ============================================================
-    // ONLY APPROVED AND REJECTED - NO PENDING
-    // MAX 155 CHARACTERS
-    // ============================================================
-    
+    // NO EMOJIS - Simple plain text messages
     if ($status === 'APPROVED') {
         // ============================================================
         // APPROVED SMS - Patient should visit doctor/hospital
+        // NO EMOJIS, PLAIN TEXT ONLY
         // ============================================================
         if ($lang === 'sw') {
             // KISWAHILI - APPROVED
@@ -227,8 +267,7 @@ function sendPF3StatusUpdateSMS($phone, $name, $pf3_number, $status, $police_not
             // Shorten if needed (max 155 chars)
             if (strlen($message) > 155) {
                 $name_short = strlen($name) > 6 ? substr($name, 0, 6) : $name;
-                $rb_text = $rb_number ? " RB: $rb_number." : ".";
-                $message = "PF3 SYS: $name_short, maombi #$pf3_number yamekubaliwa$rb_text Nenda hospitali. Asante!";
+                $message = "PF3 SYS: $name_short, maombi #$pf3_number yamekubaliwa RB: $rb_number. Nenda hospitali. Asante!";
             }
             // Final truncation to 155 chars
             if (strlen($message) > 155) {
@@ -238,13 +277,12 @@ function sendPF3StatusUpdateSMS($phone, $name, $pf3_number, $status, $police_not
         } else {
             // ENGLISH - APPROVED
             $rb_text = $rb_number ? " RB: $rb_number." : ".";
-            $message = "PF3 SYS: Dear $name, application #$pf3_number APPROVED$rb_text Visit hospital for medical exam. Thank you!";
+            $message = "PF3 SYS: Dear $name, application #$pf3_number APPROVED$rb_text Visit hospital. Thank you!";
             
             // Shorten if needed (max 155 chars)
             if (strlen($message) > 155) {
                 $name_short = strlen($name) > 6 ? substr($name, 0, 6) : $name;
-                $rb_text = $rb_number ? " RB: $rb_number." : ".";
-                $message = "PF3 SYS: $name_short, app #$pf3_number APPROVED$rb_text Visit hospital. Thank you!";
+                $message = "PF3 SYS: $name_short, app #$pf3_number APPROVED RB: $rb_number. Visit hospital. Thank you!";
             }
             // Final truncation to 155 chars
             if (strlen($message) > 155) {
@@ -256,6 +294,7 @@ function sendPF3StatusUpdateSMS($phone, $name, $pf3_number, $status, $police_not
     elseif ($status === 'REJECTED') {
         // ============================================================
         // REJECTED SMS - Clear message with reason
+        // NO EMOJIS, PLAIN TEXT ONLY
         // ============================================================
         // Truncate police notes for SMS
         $reason = $police_notes ? substr($police_notes, 0, 35) : 'No reason';
@@ -283,7 +322,7 @@ function sendPF3StatusUpdateSMS($phone, $name, $pf3_number, $status, $police_not
         } else {
             // ENGLISH - REJECTED
             $reason_text = $police_notes ? " Reason: $reason." : ".";
-            $message = "PF3 SYS: Dear $name, application #$pf3_number REJECTED$reason_text Contact police station. Thank you!";
+            $message = "PF3 SYS: Dear $name, application #$pf3_number REJECTED$reason_text Contact police. Thank you!";
             
             // Shorten if needed (max 155 chars)
             if (strlen($message) > 155) {
@@ -298,6 +337,20 @@ function sendPF3StatusUpdateSMS($phone, $name, $pf3_number, $status, $police_not
             }
         }
     }
+    
+    // ============================================================
+    // FINAL CLEAN - Remove any remaining special characters
+    // ============================================================
+    $message = preg_replace('/[\x{1F600}-\x{1F64F}]/u', '', $message);
+    $message = preg_replace('/[\x{1F300}-\x{1F5FF}]/u', '', $message);
+    $message = preg_replace('/[\x{1F680}-\x{1F6FF}]/u', '', $message);
+    $message = preg_replace('/[\x{2600}-\x{26FF}]/u', '', $message);
+    $message = preg_replace('/[\x{2700}-\x{27BF}]/u', '', $message);
+    $message = preg_replace('/[\x{1F900}-\x{1F9FF}]/u', '', $message);
+    $message = preg_replace('/[\x{1F700}-\x{1F77F}]/u', '', $message);
+    $message = str_replace(['*', '_', '~', '`', '|', '>', '<'], '', $message);
+    $message = preg_replace('/\s+/', ' ', $message);
+    $message = trim($message);
     
     // Return the SMS response
     return sendSMS($clean_phone, $message);

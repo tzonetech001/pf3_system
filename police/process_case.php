@@ -143,7 +143,7 @@ try {
     $stmt->execute([$pf3_number, $notification_message, $new_status]);
     
     // ============================================================
-    // STEP 5: Send SMS notification to patient
+    // STEP 5: Send SMS notification to patient (AUTOMATIC)
     // ============================================================
     $patient_phone = $case['phone'];
     $patient_name = $case['full_name'];
@@ -162,7 +162,7 @@ try {
     if ($sms_result['success']) {
         error_log("SMS sent successfully to $patient_phone for PF3 $pf3_number - Status: $new_status");
         
-        // Add SMS notification
+        // Add SMS notification to database
         $stmt = $pdo->prepare("
             INSERT INTO notifications (pf3_number, message, type, created_at) 
             VALUES (?, ?, ?, NOW())
@@ -200,7 +200,7 @@ try {
         }
         
         // Shorten guardian message if needed
-        if (strlen($guardian_message) > 159) {
+        if (strlen($guardian_message) > 155) {
             $guardian_message = $action === 'approve'
                 ? "PF3 SYS: Mlezi wa {$case['full_name']}, maombi #$pf3_number yamekubaliwa. RB: $rb_number."
                 : "PF3 SYS: Mlezi wa {$case['full_name']}, maombi #$pf3_number yamekataliwa.";

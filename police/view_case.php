@@ -138,19 +138,6 @@ include 'header.php';
         box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
     
-    .btn-resend-sms {
-        border-radius: 10px;
-        padding: 0.4rem 1rem;
-        font-weight: 500;
-        font-size: 13px;
-        transition: all 0.3s ease;
-    }
-    
-    .btn-resend-sms:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-    
     /* ===== ALERT STYLES - CENTERED ON SCREEN ===== */
     .alert-container {
         position: fixed;
@@ -617,7 +604,6 @@ include 'header.php';
         }
         
         .page-header .d-flex .action-btn,
-        .page-header .d-flex .btn-resend-sms,
         .page-header .d-flex .badge-status {
             width: 100%;
             text-align: center;
@@ -799,13 +785,6 @@ include 'header.php';
                 else echo 'PENDING ⏳';
             ?>
         </span>
-        
-        <!-- Resend SMS Button (only for non-pending) -->
-        <?php if ($case['status'] != 'PENDING'): ?>
-            <a href="resend_sms.php?pf3=<?php echo $pf3; ?>" class="btn btn-info btn-resend-sms">
-                <i class="fas fa-sms me-1"></i> Resend SMS
-            </a>
-        <?php endif; ?>
         
         <!-- Approve/Reject Buttons (only for pending) -->
         <?php if ($case['status'] == 'PENDING'): ?>

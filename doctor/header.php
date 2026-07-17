@@ -385,9 +385,7 @@ if (!isset($_SESSION['user_id'])) {
                 <i class="fas fa-file-alt"></i>
                 <span>My Reports</span>
             </a>
-        </div>
         
-        <div class="sidebar-footer">
             <a href="profile.php" class="menu-item">
                 <i class="fas fa-user-circle"></i>
                 <span>My Profile</span>

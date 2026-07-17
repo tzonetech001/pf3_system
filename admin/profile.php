@@ -419,8 +419,10 @@ include 'header.php';
                         <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
                         <div class="stat-number">
                             <?php 
-                            $stmt = $pdo->query("SELECT COUNT(*) FROM pf3_cases WHERE status = 'APPROVED'");
-                            echo $stmt->fetch()['count'];
+                            // FIXED: Use alias 'count' in the query
+                            $stmt = $pdo->query("SELECT COUNT(*) as count FROM pf3_cases WHERE status = 'APPROVED'");
+                            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                            echo $result ? $result['count'] : 0;
                             ?>
                         </div>
                         <small class="text-muted">Approved</small>

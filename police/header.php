@@ -330,6 +330,7 @@ if (!isset($_SESSION['user_id'])) {
                 <i class="fas fa-tachometer-alt"></i>
                 <span>Dashboard</span>
             </a>
+            
             <a href="cases.php?status=PENDING" class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'cases.php' && isset($_GET['status']) && $_GET['status'] == 'PENDING' ? 'active' : ''; ?>">
                 <i class="fas fa-clock"></i>
                 <span>Pending Cases</span>
@@ -342,6 +343,11 @@ if (!isset($_SESSION['user_id'])) {
                 <i class="fas fa-times-circle"></i>
                 <span>Rejected Cases</span>
             </a>
+             <!-- NEW: All Requests -->
+        <a href="all_requests.php" class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'all_requests.php' ? 'active' : ''; ?>">
+            <i class="fas fa-list-alt"></i>
+            <span>All Requests</span>
+        </a>
             <!-- Added My Profile and Logout to Sidebar -->
             <div class="mt-4 pt-2 border-top">
                 <a href="profile.php" class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'profile.php' ? 'active' : ''; ?>">
