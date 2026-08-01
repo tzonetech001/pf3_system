@@ -21,7 +21,7 @@ $stmt = $pdo->prepare("
            p.full_name, p.gender, p.age, p.address, p.phone as patient_phone, 
            p.guardian_phone, p.incident_date_time, p.created_at as patient_created_at,
            p.last_application_date
-    FROM pf3_cases c 
+    FROM pf3_cases c
     JOIN patients p ON c.pf3_number = p.pf3_number 
     WHERE c.pf3_number = ?
 ");

@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="bg-light">
+<body>
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
         <div class="container-fluid">
             <div class="d-flex align-items-center">
@@ -36,11 +36,11 @@
     <div class="container mt-5">
         <div class="row justify-content-center">
             <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header text-center">
-                        <h3 id="login-title">Login</h3>
+                <div class="card shadow-lg">
+                    <div class="card-header text-center bg-primary text-white">
+                        <h3 id="login-title" class="mb-0">Login</h3>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-4">
                         <?php
                         session_start();
                         if (isset($_SESSION['error'])) {
@@ -51,21 +51,27 @@
                         <form action="includes/auth.php" method="POST" id="login-form">
                             <div class="mb-3">
                                 <label for="email" class="form-label" id="email-label">Email</label>
-                                <input type="email" class="form-control" id="email" name="email" required>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                    <input type="email" class="form-control" id="email" name="email" required placeholder="Enter your email">
+                                </div>
                             </div>
                             <div class="mb-3">
                                 <label for="password" class="form-label" id="password-label">Password</label>
                                 <div class="input-group">
-                                    <input type="password" class="form-control" id="password" name="password" required>
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                    <input type="password" class="form-control" id="password" name="password" required placeholder="Enter your password">
                                     <button class="btn btn-outline-secondary" type="button" id="toggle-password">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-primary w-100" id="login-btn">Login</button>
+                            <button type="submit" class="btn btn-primary w-100 py-3" id="login-btn">
+                                <i class="fas fa-sign-in-alt me-2"></i>Login
+                            </button>
                         </form>
                         <div class="text-center mt-3">
-                            <a href="#" id="forgot-password-link">Forgot Password?</a>
+                            <a href="#" id="forgot-password-link" class="text-primary">Forgot Password?</a>
                         </div>
                     </div>
                 </div>
@@ -77,33 +83,33 @@
     <div class="modal fade" id="forgotPasswordModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="forgot-title">Forgot Password</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div id="step-email" class="step">
-                        <p>Step 1: Enter your email address</p>
+                        <p class="text-muted">Step 1: Enter your email address</p>
                         <div class="mb-3">
                             <label for="forgot-email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="forgot-email" required>
+                            <input type="email" class="form-control" id="forgot-email" required placeholder="Enter your email">
                         </div>
                         <button type="button" class="btn btn-primary w-100" id="check-email-btn">Check Email</button>
                     </div>
                     <div id="step-phone" class="step" style="display: none;">
-                        <p>Step 2: Enter your phone number</p>
+                        <p class="text-muted">Step 2: Enter your phone number</p>
                         <div class="mb-3">
                             <label for="forgot-phone" class="form-label">Phone Number</label>
-                            <input type="tel" class="form-control" id="forgot-phone" required>
+                            <input type="tel" class="form-control" id="forgot-phone" required placeholder="Enter your phone number">
                         </div>
                         <button type="button" class="btn btn-primary w-100" id="check-phone-btn">Continue to Phone Number</button>
                     </div>
                     <div id="step-password" class="step" style="display: none;">
-                        <p>Step 3: Set new password</p>
+                        <p class="text-muted">Step 3: Set new password</p>
                         <div class="mb-3">
                             <label for="new-password" class="form-label">New Password</label>
                             <div class="input-group">
-                                <input type="password" class="form-control" id="new-password" required>
+                                <input type="password" class="form-control" id="new-password" required placeholder="Enter new password">
                                 <button class="btn btn-outline-secondary" type="button" id="toggle-new-password">
                                     <i class="fas fa-eye"></i>
                                 </button>
@@ -112,7 +118,7 @@
                         <div class="mb-3">
                             <label for="confirm-password" class="form-label">Confirm Password</label>
                             <div class="input-group">
-                                <input type="password" class="form-control" id="confirm-password" required>
+                                <input type="password" class="form-control" id="confirm-password" required placeholder="Confirm new password">
                                 <button class="btn btn-outline-secondary" type="button" id="toggle-confirm-password">
                                     <i class="fas fa-eye"></i>
                                 </button>
@@ -136,16 +142,7 @@
                 loginBtn: 'Login',
                 forgot: 'Forgot Password?',
                 forgotTitle: 'Forgot Password',
-                checkEmail: 'Check Email',
-                phone: 'Phone Number',
-                newPass: 'New Password',
-                confirmPass: 'Confirm Password',
-                resetPass: 'Reset Password',
                 home: 'Home',
-                find: 'Find PF3',
-                continue: 'Continue Application',
-                create: 'Create PF3',
-                track: 'Track Status',
                 loginNav: 'Login'
             },
             sw: {
@@ -155,16 +152,7 @@
                 loginBtn: 'Ingia',
                 forgot: 'Umesahau Nenosiri?',
                 forgotTitle: 'Umesahau Nenosiri',
-                checkEmail: 'Angalia Barua Pepe',
-                phone: 'Nambari ya Simu',
-                newPass: 'Nenosiri Mpya',
-                confirmPass: 'Thibitisha Nenosiri',
-                resetPass: 'Badilisha Nenosiri',
                 home: 'Nyumbani',
-                find: 'Tafuta PF3',
-                continue: 'Endelea Maombi',
-                create: 'Tengeneza PF3',
-                track: 'Fuatilia Hali',
                 loginNav: 'Ingia'
             }
         };
@@ -177,14 +165,10 @@
             document.getElementById('login-title').textContent = translations[lang].login;
             document.getElementById('email-label').textContent = translations[lang].email;
             document.getElementById('password-label').textContent = translations[lang].password;
-            document.getElementById('login-btn').textContent = translations[lang].loginBtn;
+            document.getElementById('login-btn').innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>' + translations[lang].loginBtn;
             document.getElementById('forgot-password-link').textContent = translations[lang].forgot;
             document.getElementById('forgot-title').textContent = translations[lang].forgotTitle;
             document.getElementById('nav-home').textContent = translations[lang].home;
-            document.getElementById('nav-find').textContent = translations[lang].find;
-            document.getElementById('nav-continue').textContent = translations[lang].continue;
-            document.getElementById('nav-create').textContent = translations[lang].create;
-            document.getElementById('nav-track').textContent = translations[lang].track;
             document.getElementById('nav-login').textContent = translations[lang].loginNav;
         }
 

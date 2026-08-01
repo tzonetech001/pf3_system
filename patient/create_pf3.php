@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <nav class     ="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
         <div class="container-fluid">
             <div class="d-flex align-items-center">
                 <img src="../assets/images/hospital.png" alt="Hospital Logo" class="me-2 header-logo">
@@ -54,11 +54,11 @@
                         
                         <form action="process_step1.php" method="POST" onsubmit="return validatePhoneNumbers()">
                             <div class="mb-3">
-                                <label for="full_name" class="form-label" id="label-full-name">Full Name <span class="text-danger">*</span></label>
+                                <label for="full_name" class="form-label" id="label-full-name">Full Name <span class="text-danger"></span></label>
                                 <input type="text" class="form-control" id="full_name" name="full_name" required>
                             </div>
                             <div class="mb-3">
-                                <label for="gender" class="form-label" id="label-gender">Gender <span class="text-danger">*</span></label>
+                                <label for="gender" class="form-label" id="label-gender">Gender <span class="text-danger"></span></label>
                                 <select class="form-select" id="gender" name="gender" required>
                                     <option value="">Select Gender</option>
                                     <option value="Male">Male</option>
@@ -66,11 +66,11 @@
                                 </select>
                             </div>
                             <div class="mb-3">
-                                <label for="age" class="form-label" id="label-age">Age <span class="text-danger">*</span></label>
+                                <label for="age" class="form-label" id="label-age">Age <span class="text-danger"></span></label>
                                 <input type="number" class="form-control" id="age" name="age" min="0" max="150" required>
                             </div>
                             <div class="mb-3">
-                                <label for="address" class="form-label" id="label-address">Address <span class="text-danger">*</span></label>
+                                <label for="address" class="form-label" id="label-address">Address <span class="text-danger"></span></label>
                                 <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
                             </div>
                             <div class="mb-3">

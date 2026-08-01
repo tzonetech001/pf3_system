@@ -25,7 +25,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $email = trim($_POST['email']);
         $phone = trim($_POST['phone']);
         
-        // Validation
         $errors = [];
         
         if (empty($username)) $errors[] = "Username is required";
@@ -33,14 +32,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = "Invalid email format";
         if (empty($phone)) $errors[] = "Phone number is required";
         
-        // Check if username already exists for another admin
         $stmt = $pdo->prepare("SELECT id FROM admins WHERE username = ? AND id != ?");
         $stmt->execute([$username, $user_id]);
         if ($stmt->fetch()) {
             $errors[] = "Username already exists for another admin";
         }
         
-        // Check if email already exists for another admin
         $stmt = $pdo->prepare("SELECT id FROM admins WHERE email = ? AND id != ?");
         $stmt->execute([$email, $user_id]);
         if ($stmt->fetch()) {
@@ -56,12 +53,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ");
                 $stmt->execute([$username, $email, $phone, $user_id]);
                 
-                // Update session name
                 $_SESSION['user_name'] = $username;
-                
                 $success_message = "Profile updated successfully!";
                 
-                // Refresh admin data
                 $stmt = $pdo->prepare("SELECT * FROM admins WHERE id = ?");
                 $stmt->execute([$user_id]);
                 $admin = $stmt->fetch();
@@ -89,7 +83,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (strlen($new_password) < 6) $errors[] = "New password must be at least 6 characters";
         if ($new_password !== $confirm_password) $errors[] = "New passwords do not match";
         
-        // Verify current password
         if (empty($errors)) {
             if (!password_verify($current_password, $admin['password'])) {
                 $errors[] = "Current password is incorrect";
@@ -114,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Get system statistics for the admin
+// Get system statistics
 $stmt = $pdo->query("SELECT COUNT(*) as count FROM doctors");
 $total_doctors = $stmt->fetch()['count'];
 
@@ -144,13 +137,18 @@ include 'header.php';
 ?>
 
 <style>
+    body {
+        background: rgba(13, 71, 161, 0.05);
+    }
+    
     .profile-header-card {
-        background: linear-gradient(135deg, #A6EDCF  0%, #A6EDCF  100%);
+        background: linear-gradient(135deg, #0d47a1, #1976d2);
         border-radius: 20px;
         padding: 2rem;
         margin-bottom: 1.5rem;
         position: relative;
         overflow: hidden;
+        color: white;
     }
     
     .profile-header-card::before {
@@ -181,7 +179,7 @@ include 'header.php';
     .profile-avatar-large span {
         font-size: 48px;
         font-weight: 700;
-        color: #A6EDCF ;
+        color: #0d47a1;
     }
     
     .stat-card-profile {
@@ -189,6 +187,7 @@ include 'header.php';
         border-radius: 15px;
         transition: all 0.3s ease;
         cursor: pointer;
+        background: white;
     }
     
     .stat-card-profile:hover {
@@ -201,13 +200,19 @@ include 'header.php';
         border-radius: 20px;
         box-shadow: 0 2px 15px rgba(0,0,0,0.05);
         margin-bottom: 1.5rem;
+        background: white;
     }
     
     .info-card .card-header {
         background: white;
-        border-bottom: 2px solid #f0f0f0;
+        border-bottom: 2px solid #e8eaf6;
         padding: 1.25rem 1.5rem;
         border-radius: 20px 20px 0 0;
+    }
+    
+    .info-card .card-header h6 {
+        color: #1a237e;
+        font-weight: 600;
     }
     
     .info-item {
@@ -232,7 +237,7 @@ include 'header.php';
     }
     
     .nav-tabs-custom {
-        border-bottom: 2px solid #e2e8f0;
+        border-bottom: 2px solid #e8eaf6;
         margin-bottom: 1.5rem;
     }
     
@@ -246,12 +251,12 @@ include 'header.php';
     }
     
     .nav-tabs-custom .nav-link:hover {
-        color: #A6EDCF ;
+        color: #0d47a1;
         background: transparent;
     }
     
     .nav-tabs-custom .nav-link.active {
-        color: #A6EDCF ;
+        color: #0d47a1;
         background: transparent;
     }
     
@@ -262,12 +267,12 @@ include 'header.php';
         left: 0;
         right: 0;
         height: 2px;
-        background: linear-gradient(135deg, #A6EDCF  0%, #A6EDCF  100%);
+        background: #0d47a1;
     }
     
     .timeline-item-profile {
         padding: 1rem;
-        border-left: 3px solid #A6EDCF ;
+        border-left: 3px solid #0d47a1;
         margin-bottom: 1rem;
         background: #f8f9fa;
         border-radius: 10px;
@@ -288,8 +293,8 @@ include 'header.php';
     }
     
     .form-control-modern:focus, .form-select-modern:focus {
-        border-color: #A6EDCF ;
-        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+        border-color: #0d47a1;
+        box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.1);
     }
     
     .btn-modern {
@@ -312,9 +317,13 @@ include 'header.php';
     }
     
     .security-tip-card {
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        background: linear-gradient(135deg, #e3f2fd, #bbdefb);
         border: none;
         border-radius: 20px;
+    }
+    
+    .security-tip-card .card-body {
+        padding: 1.25rem;
     }
     
     .stats-grid {
@@ -324,7 +333,7 @@ include 'header.php';
     }
     
     .stat-item {
-        background: white;
+        background: #f8f9fa;
         border-radius: 12px;
         padding: 1rem;
         text-align: center;
@@ -339,7 +348,7 @@ include 'header.php';
     .stat-number {
         font-size: 1.5rem;
         font-weight: 700;
-        color: #A6EDCF ;
+        color: #0d47a1;
     }
     
     @media (max-width: 768px) {
@@ -364,7 +373,7 @@ include 'header.php';
     <!-- Left Column - Profile Info & Stats -->
     <div class="col-lg-4">
         <!-- Profile Header Card -->
-        <div class="profile-header-card text-center text-white">
+        <div class="profile-header-card text-center">
             <div class="profile-avatar-large">
                 <?php 
                 $name = $admin['username'];
@@ -384,8 +393,8 @@ include 'header.php';
         <!-- System Statistics -->
         <div class="card info-card">
             <div class="card-header">
-                <h6 class="mb-0 fw-bold">
-                    <i class="fas fa-chart-line me-2 text-danger"></i>System Overview
+                <h6 class="mb-0">
+                    <i class="fas fa-chart-line me-2 text-primary"></i>System Overview
                 </h6>
             </div>
             <div class="card-body">
@@ -419,7 +428,6 @@ include 'header.php';
                         <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
                         <div class="stat-number">
                             <?php 
-                            // FIXED: Use alias 'count' in the query
                             $stmt = $pdo->query("SELECT COUNT(*) as count FROM pf3_cases WHERE status = 'APPROVED'");
                             $result = $stmt->fetch(PDO::FETCH_ASSOC);
                             echo $result ? $result['count'] : 0;
@@ -434,8 +442,8 @@ include 'header.php';
         <!-- Contact Info Card -->
         <div class="card info-card">
             <div class="card-header">
-                <h6 class="mb-0 fw-bold">
-                    <i class="fas fa-address-card me-2 text-danger"></i>Account Information
+                <h6 class="mb-0">
+                    <i class="fas fa-address-card me-2 text-primary"></i>Account Information
                 </h6>
             </div>
             <div class="card-body">
@@ -504,6 +512,18 @@ include 'header.php';
                 <div class="tab-content">
                     <!-- Edit Profile Tab -->
                     <div class="tab-pane fade show active" id="edit" role="tabpanel">
+                        <?php if ($success_message): ?>
+                            <div class="alert alert-success alert-dismissible fade show">
+                                <i class="fas fa-check-circle me-2"></i> <?php echo $success_message; ?>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        <?php endif; ?>
+                        <?php if ($error_message): ?>
+                            <div class="alert alert-danger alert-dismissible fade show">
+                                <i class="fas fa-exclamation-circle me-2"></i> <?php echo $error_message; ?>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        <?php endif; ?>
                         <form method="POST" action="" class="needs-validation" novalidate>
                             <div class="row g-3">
                                 <div class="col-12">
@@ -513,7 +533,6 @@ include 'header.php';
                                     <input type="text" class="form-control form-control-modern" id="username" name="username" 
                                            value="<?php echo htmlspecialchars($admin['username']); ?>" required>
                                     <div class="form-text">This will be displayed as your display name</div>
-                                    <div class="invalid-feedback">Username is required</div>
                                 </div>
                                 
                                 <div class="col-md-6">
@@ -522,7 +541,6 @@ include 'header.php';
                                     </label>
                                     <input type="email" class="form-control form-control-modern" id="email" name="email" 
                                            value="<?php echo htmlspecialchars($admin['email']); ?>" required>
-                                    <div class="invalid-feedback">Valid email is required</div>
                                 </div>
                                 
                                 <div class="col-md-6">
@@ -531,12 +549,11 @@ include 'header.php';
                                     </label>
                                     <input type="tel" class="form-control form-control-modern" id="phone" name="phone" 
                                            value="<?php echo htmlspecialchars($admin['phone']); ?>" required>
-                                    <div class="invalid-feedback">Phone number is required</div>
                                 </div>
                                 
                                 <div class="col-12">
                                     <hr>
-                                    <button type="submit" name="update_profile" class="btn btn-danger btn-modern">
+                                    <button type="submit" name="update_profile" class="btn btn-primary btn-modern">
                                         <i class="fas fa-save me-2"></i> Update Profile
                                     </button>
                                     <button type="reset" class="btn btn-secondary btn-modern">
@@ -585,7 +602,6 @@ include 'header.php';
                                             <li>Minimum 6 characters long</li>
                                             <li>Use a mix of uppercase and lowercase letters</li>
                                             <li>Include at least one number</li>
-                                            <li>Special characters are optional but recommended</li>
                                         </ul>
                                     </div>
                                     
@@ -669,44 +685,32 @@ include 'header.php';
         <!-- Security Tips Card -->
         <div class="card security-tip-card">
             <div class="card-body">
-                <h6 class="card-title fw-bold mb-3">
-                    <i class="fas fa-shield-alt text-danger me-2"></i>Security Best Practices
+                <h6 class="card-title fw-bold mb-3 text-primary">
+                    <i class="fas fa-shield-alt me-2"></i>Security Best Practices
                 </h6>
                 <div class="row g-3">
                     <div class="col-md-6">
                         <div class="d-flex align-items-start gap-2">
-                            <i class="fas fa-check-circle text-danger mt-1"></i>
+                            <i class="fas fa-check-circle text-primary mt-1"></i>
                             <small>Use a strong, unique password for this account</small>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="d-flex align-items-start gap-2">
-                            <i class="fas fa-check-circle text-danger mt-1"></i>
-                            <small>Enable two-factor authentication if available</small>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="d-flex align-items-start gap-2">
-                            <i class="fas fa-check-circle text-danger mt-1"></i>
+                            <i class="fas fa-check-circle text-primary mt-1"></i>
                             <small>Never share your password with anyone</small>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="d-flex align-items-start gap-2">
-                            <i class="fas fa-check-circle text-danger mt-1"></i>
+                            <i class="fas fa-check-circle text-primary mt-1"></i>
                             <small>Always log out when leaving your workstation</small>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="d-flex align-items-start gap-2">
-                            <i class="fas fa-check-circle text-danger mt-1"></i>
+                            <i class="fas fa-check-circle text-primary mt-1"></i>
                             <small>Regularly review audit logs for suspicious activity</small>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="d-flex align-items-start gap-2">
-                            <i class="fas fa-check-circle text-danger mt-1"></i>
-                            <small>Keep your contact information up to date</small>
                         </div>
                     </div>
                 </div>
@@ -716,30 +720,30 @@ include 'header.php';
         <!-- Quick Actions Card -->
         <div class="card info-card mt-3">
             <div class="card-header">
-                <h6 class="mb-0 fw-bold">
-                    <i class="fas fa-bolt me-2 text-danger"></i>Quick Actions
+                <h6 class="mb-0">
+                    <i class="fas fa-bolt me-2 text-primary"></i>Quick Actions
                 </h6>
             </div>
             <div class="card-body">
                 <div class="row g-2">
                     <div class="col-6">
-                        <a href="register_doctor.php" class="btn btn-outline-danger w-100">
-                            <i class="fas fa-user-md me-2"></i> Add Doctor
-                        </a>
-                    </div>
-                    <div class="col-6">
-                        <a href="register_police.php" class="btn btn-outline-warning w-100">
-                            <i class="fas fa-user-shield me-2"></i> Add Police
-                        </a>
-                    </div>
-                    <div class="col-6">
-                        <a href="manage_users.php" class="btn btn-outline-info w-100">
+                        <a href="manage_users.php" class="btn btn-outline-primary w-100">
                             <i class="fas fa-users me-2"></i> Manage Users
                         </a>
                     </div>
                     <div class="col-6">
                         <a href="reports.php" class="btn btn-outline-success w-100">
                             <i class="fas fa-chart-bar me-2"></i> View Reports
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="audit_log.php" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-history me-2"></i> Audit Log
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="logout.php" class="btn btn-outline-danger w-100">
+                            <i class="fas fa-sign-out-alt me-2"></i> Logout
                         </a>
                     </div>
                 </div>
@@ -787,7 +791,7 @@ function checkPasswordStrength() {
     strengthBar.style.width = width + '%';
     
     if (strength <= 2) {
-        strengthBar.style.backgroundColor = '#A6EDCF ';
+        strengthBar.style.backgroundColor = '#dc3545';
     } else if (strength <= 4) {
         strengthBar.style.backgroundColor = '#ffc107';
     } else {
@@ -823,35 +827,6 @@ function validatePasswordForm() {
     
     return confirm('Are you sure you want to change your password? You will need to use the new password for future logins.');
 }
-
-// Phone number formatting
-document.getElementById('phone')?.addEventListener('input', function(e) {
-    let phone = this.value.replace(/\D/g, '');
-    if (phone.length > 10) phone = phone.slice(0, 10);
-    this.value = phone;
-});
-
-// Show appropriate tab based on URL hash
-document.addEventListener('DOMContentLoaded', function() {
-    const hash = window.location.hash;
-    if (hash === '#password') {
-        const passwordTab = document.getElementById('password-tab');
-        if (passwordTab) {
-            bootstrap.Tab.getOrCreateInstance(passwordTab).show();
-        }
-    } else if (hash === '#activity') {
-        const activityTab = document.getElementById('activity-tab');
-        if (activityTab) {
-            bootstrap.Tab.getOrCreateInstance(activityTab).show();
-        }
-    }
-    
-    // Initialize password strength checker
-    const passwordInput = document.getElementById('new_password');
-    if (passwordInput) {
-        passwordInput.addEventListener('keyup', checkPasswordStrength);
-    }
-});
 </script>
 
 <?php include 'footer.php'; ?>

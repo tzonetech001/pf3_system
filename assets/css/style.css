@@ -2,33 +2,126 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #A6EDCF;
+    background-image: url('../images/Ambulance.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
     color: #333;
+    min-height: 100vh;
+    position: relative;
+}
+
+/* Blue overlay filter */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(13, 71, 161, 0.65);
+    z-index: -1;
 }
 
 .navbar-brand {
     font-weight: bold;
+    color: #0d47a1 !important;
+}
+
+.navbar {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .card {
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    background-color: white;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: none;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.card-header {
+    background: linear-gradient(135deg, #0d47a1, #1976d2);
+    border: none;
+    padding: 20px 20px;
+}
+
+.card-header h2 {
+    color: #ffffff;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.card-body {
+    padding: 30px;
+}
+
+.btn {
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-size: 1.05rem;
 }
 
 .btn-primary {
-    background-color: #A6EDCF;
-    border-color: #A6EDCF;
-    color: #333;
+    background: linear-gradient(135deg, #0d47a1, #1976d2);
+    border: none;
+    color: #fff;
 }
 
 .btn-primary:hover {
-    background-color: #8BC34A;
-    border-color: #8BC34A;
+    background: linear-gradient(135deg, #0a3a8a, #1565c0);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(13, 71, 161, 0.4);
+}
+
+.btn-outline-primary {
+    border: 2px solid #0d47a1;
+    color: #0d47a1;
+}
+
+.btn-outline-primary:hover {
+    background: #0d47a1;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(13, 71, 161, 0.3);
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #455a64, #607d8b);
+    border: none;
+    color: #fff;
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #37474f, #546e7a);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(69, 90, 100, 0.4);
+}
+
+.btn-outline-secondary {
+    border: 2px solid #607d8b;
+    color: #607d8b;
+}
+
+.btn-outline-secondary:hover {
+    background: #607d8b;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(96, 125, 139, 0.3);
+}
+
+.btn-lg {
+    padding: 15px 20px;
 }
 
 .table th {
-    background-color: #A6EDCF;
-    color: #333;
+    background: linear-gradient(135deg, #0d47a1, #1976d2);
+    color: #fff;
 }
 
 .badge {
@@ -40,18 +133,27 @@ body {
 }
 
 .form-control:focus {
-    border-color: #A6EDCF;
-    box-shadow: 0 0 0 0.2rem rgba(166, 237, 207, 0.25);
+    border-color: #0d47a1;
+    box-shadow: 0 0 0 0.2rem rgba(13, 71, 161, 0.25);
 }
 
 .header-logo {
-    border-radius: 50px;
+    border-radius: 50%;
     width: 50px;
     height: 50px;
+    object-fit: cover;
+    border: 2px solid #0d47a1;
 }
 
 .language-switch {
     width: auto;
+    border-radius: 8px;
+    border-color: #0d47a1;
+}
+
+.language-switch:focus {
+    border-color: #0d47a1;
+    box-shadow: 0 0 0 0.2rem rgba(13, 71, 161, 0.25);
 }
 
 @media (max-width: 991px) {
@@ -65,5 +167,18 @@ body {
     }
     .language-switch {
         margin-bottom: 10px;
+    }
+    .card-body {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 576px) {
+    .btn-lg {
+        font-size: 0.9rem;
+        padding: 12px 15px;
+    }
+    .card-header h2 {
+        font-size: 1.5rem;
     }
 }

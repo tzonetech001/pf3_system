@@ -37,23 +37,31 @@
     <div class="container mt-5">
         <div class="row justify-content-center">
             <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header text-center">
-                        <h2 id="patient-portal">Patient Portal</h2>
+                <div class="card shadow-lg">
+                    <div class="card-header text-center bg-primary text-white">
+                        <h2 id="patient-portal" class="mb-0">Patient Portal</h2>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-4">
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <a href="patient/find_pf3.php" class="btn btn-outline-primary btn-lg w-100" id="find-pf3">Find PF3</a>
+                                <a href="patient/find_pf3.php" class="btn btn-outline-primary btn-lg w-100 py-3" id="find-pf3">
+                                    <i class="fas fa-search me-2"></i>Find PF3
+                                </a>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <a href="patient/create_pf3.php" class="btn btn-primary btn-lg w-100" id="create-pf3">Create PF3</a>
+                                <a href="patient/create_pf3.php" class="btn btn-primary btn-lg w-100 py-3" id="create-pf3">
+                                    <i class="fas fa-plus-circle me-2"></i>Create PF3
+                                </a>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <a href="patient/continue_application.php" class="btn btn-outline-secondary btn-lg w-100" id="continue-app">Continue Application</a>
+                                <a href="patient/continue_application.php" class="btn btn-outline-secondary btn-lg w-100 py-3" id="continue-app">
+                                    <i class="fas fa-arrow-right me-2"></i>Continue Application
+                                </a>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <a href="patient/track_status.php" class="btn btn-secondary btn-lg w-100" id="track-status">Track Status</a>
+                                <a href="patient/track_status.php" class="btn btn-secondary btn-lg w-100 py-3" id="track-status">
+                                    <i class="fas fa-chart-line me-2"></i>Track Status
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -73,10 +81,6 @@
                 continueApp: 'Continue Application',
                 trackStatus: 'Track Status',
                 home: 'Home',
-                find: 'Find PF3',
-                continue: 'Continue Application',
-                create: 'Create PF3',
-                track: 'Track Status',
                 login: 'Login'
             },
             sw: {
@@ -86,10 +90,6 @@
                 continueApp: 'Endelea Maombi',
                 trackStatus: 'Fuatilia Hali',
                 home: 'Nyumbani',
-                find: 'Tafuta PF3',
-                continue: 'Endelea Maombi',
-                create: 'Tengeneza PF3',
-                track: 'Fuatilia Hali',
                 login: 'Ingia'
             }
         };
@@ -100,15 +100,11 @@
             currentLang = lang;
             localStorage.setItem('pf3_lang', lang);
             document.getElementById('patient-portal').textContent = translations[lang].patientPortal;
-            document.getElementById('find-pf3').textContent = translations[lang].findPF3;
-            document.getElementById('create-pf3').textContent = translations[lang].createPF3;
-            document.getElementById('continue-app').textContent = translations[lang].continueApp;
-            document.getElementById('track-status').textContent = translations[lang].trackStatus;
+            document.getElementById('find-pf3').innerHTML = '<i class="fas fa-search me-2"></i>' + translations[lang].findPF3;
+            document.getElementById('create-pf3').innerHTML = '<i class="fas fa-plus-circle me-2"></i>' + translations[lang].createPF3;
+            document.getElementById('continue-app').innerHTML = '<i class="fas fa-arrow-right me-2"></i>' + translations[lang].continueApp;
+            document.getElementById('track-status').innerHTML = '<i class="fas fa-chart-line me-2"></i>' + translations[lang].trackStatus;
             document.getElementById('nav-home').textContent = translations[lang].home;
-            document.getElementById('nav-find').textContent = translations[lang].find;
-            document.getElementById('nav-continue').textContent = translations[lang].continue;
-            document.getElementById('nav-create').textContent = translations[lang].create;
-            document.getElementById('nav-track').textContent = translations[lang].track;
             document.getElementById('nav-login').textContent = translations[lang].login;
         }
 

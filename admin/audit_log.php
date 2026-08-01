@@ -55,7 +55,7 @@ $offset = ($page - 1) * $limit;
 $total = $pdo->query("SELECT COUNT(*) FROM audit_logs")->fetchColumn();
 $total_pages = ceil($total / $limit);
 
-// Get audit logs - FIXED: Use proper integer binding or direct values
+// Get audit logs
 $stmt = $pdo->prepare("
     SELECT * FROM audit_logs 
     ORDER BY created_at DESC 
@@ -68,18 +68,28 @@ include 'header.php';
 ?>
 
 <style>
+    body {
+        background: rgba(13, 71, 161, 0.08);
+    }
+    
     .page-header {
         background: white;
         padding: 1.5rem;
         border-radius: 15px;
         margin-bottom: 1.5rem;
         box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        border-left: 4px solid #0d47a1;
     }
     
     .table-card {
         border: none;
         border-radius: 15px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        background: white;
+    }
+    
+    .table-card .card-body {
+        padding: 0;
     }
     
     .badge-action {
@@ -92,13 +102,13 @@ include 'header.php';
     .pagination-custom .page-link {
         border-radius: 10px;
         margin: 0 3px;
-        color: #166534;
+        color: #0d47a1;
     }
     
     .pagination-custom .page-item.active .page-link {
-        background: linear-gradient(135deg, #A6EDCF 0%, #6ee7b7 100%);
-        border-color: #A6EDCF;
-        color: #064e3b;
+        background: linear-gradient(135deg, #0d47a1, #1976d2);
+        border-color: #0d47a1;
+        color: white;
         font-weight: 600;
     }
     
@@ -121,10 +131,15 @@ include 'header.php';
         width: 100%;
     }
     
+    .filter-input input:focus, .filter-input select:focus {
+        border-color: #0d47a1;
+        box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.1);
+    }
+    
     .export-btn {
-        background: linear-gradient(135deg, #A6EDCF 0%, #6ee7b7 100%);
+        background: linear-gradient(135deg, #0d47a1, #1976d2);
         border: none;
-        color: #064e3b;
+        color: white;
         font-weight: 600;
         padding: 0.5rem 1rem;
         border-radius: 10px;
@@ -133,11 +148,12 @@ include 'header.php';
     
     .export-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        box-shadow: 0 5px 15px rgba(13, 71, 161, 0.3);
+        color: white;
     }
     
     .bulk-actions-bar {
-        background: #f8f9fa;
+        background: #e3f2fd;
         padding: 0.75rem 1rem;
         border-radius: 10px;
         margin-bottom: 1rem;
@@ -145,6 +161,7 @@ include 'header.php';
         align-items: center;
         gap: 1rem;
         flex-wrap: wrap;
+        border: 1px solid #bbdefb;
     }
     
     .bulk-actions-bar.active {
@@ -153,7 +170,7 @@ include 'header.php';
     
     .bulk-actions-bar .selected-count {
         font-weight: 600;
-        color: #166534;
+        color: #0d47a1;
     }
     
     .bulk-delete-btn {
@@ -170,6 +187,7 @@ include 'header.php';
         background: #c82333;
         transform: translateY(-2px);
         box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+        color: white;
     }
     
     .clear-all-btn {
@@ -186,24 +204,42 @@ include 'header.php';
         background: #5a6268;
         transform: translateY(-2px);
         box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+        color: white;
     }
     
     .select-all-checkbox {
         width: 18px;
         height: 18px;
         cursor: pointer;
+        accent-color: #0d47a1;
     }
     
     .row-checkbox {
         width: 18px;
         height: 18px;
         cursor: pointer;
+        accent-color: #0d47a1;
     }
     
     .action-buttons-group {
         display: flex;
         gap: 0.5rem;
         flex-wrap: wrap;
+    }
+    
+    .table th {
+        background: #e8eaf6;
+        color: #1a237e;
+        font-weight: 600;
+        border-bottom: 2px solid #0d47a1;
+    }
+    
+    .table td {
+        vertical-align: middle;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: #e3f2fd;
     }
     
     @media (max-width: 768px) {
@@ -220,13 +256,13 @@ include 'header.php';
 
 <div class="page-header d-flex justify-content-between align-items-center flex-wrap">
     <div>
-        <h4 class="mb-1 fw-bold">
+        <h4 class="mb-1 fw-bold text-primary">
             <i class="fas fa-history me-2"></i>Audit Log
         </h4>
         <p class="text-muted mb-0">Complete system activity history</p>
     </div>
     <div class="mt-2 mt-sm-0">
-        <span class="badge bg-secondary">Total Records: <?php echo $total; ?></span>
+        <span class="badge bg-primary">Total Records: <?php echo $total; ?></span>
         <button class="btn btn-sm export-btn ms-2" onclick="exportToCSV()">
             <i class="fas fa-download me-1"></i> Export CSV
         </button>
@@ -249,7 +285,7 @@ include 'header.php';
 
 <!-- Filter Section -->
 <div class="card table-card mb-4">
-    <div class="card-body">
+    <div class="card-body p-3">
         <div class="filter-section">
             <div class="filter-input">
                 <input type="text" id="searchInput" class="form-control" placeholder="Search by action, user type, or details..." onkeyup="filterTable()">
@@ -306,7 +342,7 @@ include 'header.php';
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover mb-0" id="auditTable">
-                <thead class="table-light">
+                <thead>
                     <tr>
                         <th style="width: 40px;">
                             <input type="checkbox" class="select-all-checkbox" id="selectAll" onchange="toggleAllCheckboxes()">
@@ -344,9 +380,9 @@ include 'header.php';
                             <td>
                                 <?php 
                                 $icon = '';
-                                if ($log['user_type'] == 'admin') $icon = '<i class="fas fa-user-cog me-1"></i>';
-                                elseif ($log['user_type'] == 'doctor') $icon = '<i class="fas fa-user-md me-1"></i>';
-                                else $icon = '<i class="fas fa-user-shield me-1"></i>';
+                                if ($log['user_type'] == 'admin') $icon = '<i class="fas fa-user-cog me-1 text-primary"></i>';
+                                elseif ($log['user_type'] == 'doctor') $icon = '<i class="fas fa-user-md me-1 text-info"></i>';
+                                else $icon = '<i class="fas fa-user-shield me-1 text-warning"></i>';
                                 echo $icon . ' ' . ucfirst($log['user_type']);
                                 ?>
                             </td>
@@ -418,7 +454,6 @@ include 'header.php';
 <?php endif; ?>
 
 <script>
-// Filter table function
 function filterTable() {
     const searchInput = document.getElementById('searchInput').value.toLowerCase();
     const userTypeFilter = document.getElementById('userTypeFilter').value.toLowerCase();
@@ -428,7 +463,6 @@ function filterTable() {
     const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
     
     for (let row of rows) {
-        // Skip if row has no cells (empty state row)
         if (row.cells.length < 7) continue;
         
         let action = row.cells[2]?.innerText.toLowerCase() || '';
@@ -444,7 +478,6 @@ function filterTable() {
             row.style.display = '';
         } else {
             row.style.display = 'none';
-            // Uncheck hidden rows
             const checkbox = row.querySelector('.row-checkbox');
             if (checkbox) {
                 checkbox.checked = false;
@@ -454,7 +487,6 @@ function filterTable() {
     updateBulkActions();
 }
 
-// Clear filters function
 function clearFilters() {
     document.getElementById('searchInput').value = '';
     document.getElementById('userTypeFilter').value = '';
@@ -462,7 +494,6 @@ function clearFilters() {
     filterTable();
 }
 
-// Toggle all checkboxes
 function toggleAllCheckboxes() {
     const selectAll = document.getElementById('selectAll');
     const checkboxes = document.querySelectorAll('.row-checkbox');
@@ -477,7 +508,6 @@ function toggleAllCheckboxes() {
     updateBulkActions();
 }
 
-// Update bulk actions bar
 function updateBulkActions() {
     const checkboxes = document.querySelectorAll('.row-checkbox:checked');
     const selectedIds = Array.from(checkboxes).map(cb => cb.dataset.id);
@@ -493,7 +523,6 @@ function updateBulkActions() {
         bulkBar.classList.remove('active');
     }
     
-    // Update hidden inputs for bulk delete
     const container = document.getElementById('selectedIdsContainer');
     container.innerHTML = '';
     selectedIds.forEach(id => {
@@ -505,7 +534,6 @@ function updateBulkActions() {
     });
 }
 
-// Confirm bulk delete
 function confirmBulkDelete() {
     const checkboxes = document.querySelectorAll('.row-checkbox:checked');
     const count = checkboxes.length;
@@ -520,7 +548,6 @@ function confirmBulkDelete() {
     }
 }
 
-// Confirm clear all
 function confirmClearAll() {
     const totalRecords = <?php echo $total; ?>;
     if (totalRecords === 0) {
@@ -535,7 +562,6 @@ function confirmClearAll() {
     }
 }
 
-// Deselect all
 function deselectAll() {
     document.querySelectorAll('.row-checkbox').forEach(cb => {
         cb.checked = false;
@@ -544,20 +570,16 @@ function deselectAll() {
     updateBulkActions();
 }
 
-// Export to CSV function
 function exportToCSV() {
     const table = document.getElementById('auditTable');
     const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
     let csv = [];
     
-    // Headers
     csv.push(['ID', 'Action', 'User Type', 'User ID', 'Details', 'Date/Time'].join(','));
     
-    // Data
     for (let row of rows) {
         if (row.style.display !== 'none' && row.cells.length >= 7) {
             let rowData = [];
-            // Skip checkbox column (index 0), get data from index 1 to 6
             for (let i = 1; i < 7; i++) {
                 let cellText = row.cells[i].innerText.replace(/,/g, ';');
                 rowData.push('"' + cellText + '"');
@@ -566,7 +588,6 @@ function exportToCSV() {
         }
     }
     
-    // Download
     const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -577,11 +598,6 @@ function exportToCSV() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
-
-// Auto-refresh every 30 seconds (optional)
-setTimeout(function() {
-    location.reload();
-}, 30000);
 </script>
 
 <?php include 'footer.php'; ?>
