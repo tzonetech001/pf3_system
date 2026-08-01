@@ -138,12 +138,13 @@ include 'header.php';
 
 <style>
     .profile-header-card {
-        background: linear-gradient(135deg, #A6EDCF 0%, #A6EDCF  100%);
+        background: linear-gradient(135deg, #0d47a1 0%, #1976d2 100%);
         border-radius: 20px;
         padding: 2rem;
         margin-bottom: 1.5rem;
         position: relative;
         overflow: hidden;
+        color: white;
     }
     
     .profile-header-card::before {
@@ -171,15 +172,10 @@ include 'header.php';
         box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
     
-    .profile-avatar-large i {
-        font-size: 60px;
-        color: #A6EDCF ;
-    }
-    
     .profile-avatar-large span {
         font-size: 48px;
         font-weight: 700;
-        color: #A6EDCF ;
+        color: #0d47a1;
     }
     
     .stat-card-profile {
@@ -187,11 +183,17 @@ include 'header.php';
         border-radius: 15px;
         transition: all 0.3s ease;
         cursor: pointer;
+        background: white;
+        border-left: 4px solid #0d47a1;
     }
     
     .stat-card-profile:hover {
         transform: translateY(-3px);
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 5px 20px rgba(13, 71, 161, 0.15);
+    }
+    
+    .stat-card-profile .card-body {
+        padding: 1rem 1.25rem;
     }
     
     .info-card {
@@ -199,13 +201,19 @@ include 'header.php';
         border-radius: 20px;
         box-shadow: 0 2px 15px rgba(0,0,0,0.05);
         margin-bottom: 1.5rem;
+        background: white;
     }
     
     .info-card .card-header {
         background: white;
-        border-bottom: 2px solid #f0f0f0;
+        border-bottom: 2px solid #e8eaf6;
         padding: 1.25rem 1.5rem;
         border-radius: 20px 20px 0 0;
+    }
+    
+    .info-card .card-header h6 {
+        color: #1a237e;
+        font-weight: 600;
     }
     
     .info-item {
@@ -236,7 +244,7 @@ include 'header.php';
     
     .timeline-item-profile {
         padding: 1rem;
-        border-left: 3px solid #667eea;
+        border-left: 3px solid #0d47a1;
         margin-bottom: 1rem;
         background: #f8f9fa;
         border-radius: 10px;
@@ -244,7 +252,7 @@ include 'header.php';
     }
     
     .timeline-item-profile:hover {
-        background: white;
+        background: #e3f2fd;
         box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         transform: translateX(5px);
     }
@@ -257,8 +265,8 @@ include 'header.php';
     }
     
     .form-control-modern:focus, .form-select-modern:focus {
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        border-color: #0d47a1;
+        box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.15);
     }
     
     .btn-modern {
@@ -273,8 +281,35 @@ include 'header.php';
         box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
     
+    .btn-primary {
+        background: #0d47a1;
+        border-color: #0d47a1;
+    }
+    
+    .btn-primary:hover {
+        background: #0a3a8a;
+        border-color: #0a3a8a;
+    }
+    
+    .btn-warning {
+        background: #ff9800;
+        border-color: #ff9800;
+        color: white;
+    }
+    
+    .btn-warning:hover {
+        background: #e68900;
+        border-color: #e68900;
+        color: white;
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        border-color: #6c757d;
+    }
+    
     .nav-tabs-custom {
-        border-bottom: 2px solid #e2e8f0;
+        border-bottom: 2px solid #e8eaf6;
         margin-bottom: 1.5rem;
     }
     
@@ -288,12 +323,12 @@ include 'header.php';
     }
     
     .nav-tabs-custom .nav-link:hover {
-        color: #A6EDCF;
+        color: #0d47a1;
         background: transparent;
     }
     
     .nav-tabs-custom .nav-link.active {
-        color: #A6EDCF;
+        color: #0d47a1;
         background: transparent;
     }
     
@@ -304,7 +339,7 @@ include 'header.php';
         left: 0;
         right: 0;
         height: 2px;
-        background: linear-gradient(135deg, #A6EDCF 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #0d47a1 0%, #1976d2 100%);
     }
     
     .password-strength {
@@ -315,9 +350,25 @@ include 'header.php';
     }
     
     .security-tip-card {
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
         border: none;
         border-radius: 20px;
+    }
+    
+    .security-tip-card .text-primary {
+        color: #0d47a1 !important;
+    }
+    
+    .alert-success {
+        background: #d4edda;
+        border-color: #28a745;
+        color: #155724;
+    }
+    
+    .alert-danger {
+        background: #f8d7da;
+        border-color: #dc3545;
+        color: #721c24;
     }
     
     @media (max-width: 768px) {
@@ -332,6 +383,9 @@ include 'header.php';
             padding: 0.5rem 1rem;
             font-size: 0.9rem;
         }
+        .stat-card-profile h3 {
+            font-size: 1.3rem;
+        }
     }
 </style>
 
@@ -339,7 +393,7 @@ include 'header.php';
     <!-- Left Column - Profile Info & Stats -->
     <div class="col-lg-4">
         <!-- Profile Header Card -->
-        <div class="profile-header-card text-center text-white">
+        <div class="profile-header-card text-center">
             <div class="profile-avatar-large">
                 <?php 
                 $name = $officer['first_name'] . ' ' . $officer['last_name'];
@@ -370,7 +424,7 @@ include 'header.php';
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <span class="text-muted small text-uppercase">Total Processed</span>
-                                <h3 class="mb-0 fw-bold mt-1"><?php echo $stats['total_processed'] ?? 0; ?></h3>
+                                <h3 class="mb-0 fw-bold mt-1 text-primary"><?php echo $stats['total_processed'] ?? 0; ?></h3>
                             </div>
                             <div class="bg-primary bg-opacity-10 p-3 rounded-circle">
                                 <i class="fas fa-folder-open fa-2x text-primary"></i>
@@ -380,7 +434,7 @@ include 'header.php';
                 </div>
             </div>
             <div class="col-6">
-                <div class="card stat-card-profile shadow-sm">
+                <div class="card stat-card-profile shadow-sm" style="border-left-color: #28a745;">
                     <div class="card-body">
                         <div class="text-center">
                             <div class="bg-success bg-opacity-10 p-2 rounded-circle d-inline-block mb-2">
@@ -393,7 +447,7 @@ include 'header.php';
                 </div>
             </div>
             <div class="col-6">
-                <div class="card stat-card-profile shadow-sm">
+                <div class="card stat-card-profile shadow-sm" style="border-left-color: #dc3545;">
                     <div class="card-body">
                         <div class="text-center">
                             <div class="bg-danger bg-opacity-10 p-2 rounded-circle d-inline-block mb-2">
@@ -439,7 +493,7 @@ include 'header.php';
                     </div>
                     <div class="info-value">
                         <?php 
-                        $lastLogin = $activities[0]['created_at'] ?? $officer['created_at'];
+                        $lastLogin = !empty($activities) ? $activities[0]['created_at'] : $officer['created_at'];
                         echo date('d/m/Y H:i', strtotime($lastLogin));
                         ?>
                     </div>
@@ -471,6 +525,20 @@ include 'header.php';
                 </ul>
             </div>
             <div class="card-body">
+                <?php if ($success_message): ?>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i> <?php echo $success_message; ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php endif; ?>
+                
+                <?php if ($error_message): ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i> <?php echo $error_message; ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php endif; ?>
+                
                 <div class="tab-content">
                     <!-- Edit Profile Tab -->
                     <div class="tab-pane fade show active" id="edit" role="tabpanel">
@@ -478,7 +546,7 @@ include 'header.php';
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label for="first_name" class="form-label fw-semibold">
-                                        First Name <span class="text-danger">*</span>
+                                        <i class="fas fa-user me-1 text-primary"></i> First Name <span class="text-danger">*</span>
                                     </label>
                                     <input type="text" class="form-control form-control-modern" id="first_name" name="first_name" 
                                            value="<?php echo htmlspecialchars($officer['first_name']); ?>" required>
@@ -487,7 +555,7 @@ include 'header.php';
                                 
                                 <div class="col-md-6">
                                     <label for="last_name" class="form-label fw-semibold">
-                                        Last Name <span class="text-danger">*</span>
+                                        <i class="fas fa-user me-1 text-primary"></i> Last Name <span class="text-danger">*</span>
                                     </label>
                                     <input type="text" class="form-control form-control-modern" id="last_name" name="last_name" 
                                            value="<?php echo htmlspecialchars($officer['last_name']); ?>" required>
@@ -496,7 +564,7 @@ include 'header.php';
                                 
                                 <div class="col-md-12">
                                     <label for="rank" class="form-label fw-semibold">
-                                        Rank <span class="text-danger">*</span>
+                                        <i class="fas fa-badge me-1 text-primary"></i> Rank <span class="text-danger">*</span>
                                     </label>
                                     <select class="form-select form-select-modern" id="rank" name="rank" required>
                                         <option value="">Select Rank</option>
@@ -515,7 +583,7 @@ include 'header.php';
                                 
                                 <div class="col-md-6">
                                     <label for="email" class="form-label fw-semibold">
-                                        Email Address <span class="text-danger">*</span>
+                                        <i class="fas fa-envelope me-1 text-primary"></i> Email Address <span class="text-danger">*</span>
                                     </label>
                                     <input type="email" class="form-control form-control-modern" id="email" name="email" 
                                            value="<?php echo htmlspecialchars($officer['email']); ?>" required>
@@ -524,7 +592,7 @@ include 'header.php';
                                 
                                 <div class="col-md-6">
                                     <label for="phone" class="form-label fw-semibold">
-                                        Phone Number <span class="text-danger">*</span>
+                                        <i class="fas fa-phone me-1 text-primary"></i> Phone Number <span class="text-danger">*</span>
                                     </label>
                                     <input type="tel" class="form-control form-control-modern" id="phone" name="phone" 
                                            value="<?php echo htmlspecialchars($officer['phone']); ?>" required>
@@ -550,7 +618,7 @@ include 'header.php';
                             <div class="row g-3">
                                 <div class="col-12">
                                     <label for="current_password" class="form-label fw-semibold">
-                                        <i class="fas fa-lock me-1"></i> Current Password <span class="text-danger">*</span>
+                                        <i class="fas fa-lock me-1 text-primary"></i> Current Password <span class="text-danger">*</span>
                                     </label>
                                     <input type="password" class="form-control form-control-modern" id="current_password" 
                                            name="current_password" required>
@@ -559,7 +627,7 @@ include 'header.php';
                                 
                                 <div class="col-md-6">
                                     <label for="new_password" class="form-label fw-semibold">
-                                        <i class="fas fa-key me-1"></i> New Password <span class="text-danger">*</span>
+                                        <i class="fas fa-key me-1 text-primary"></i> New Password <span class="text-danger">*</span>
                                     </label>
                                     <input type="password" class="form-control form-control-modern" id="new_password" 
                                            name="new_password" required onkeyup="checkPasswordStrength()">
@@ -569,7 +637,7 @@ include 'header.php';
                                 
                                 <div class="col-md-6">
                                     <label for="confirm_password" class="form-label fw-semibold">
-                                        <i class="fas fa-check-circle me-1"></i> Confirm New Password <span class="text-danger">*</span>
+                                        <i class="fas fa-check-circle me-1 text-primary"></i> Confirm New Password <span class="text-danger">*</span>
                                     </label>
                                     <input type="password" class="form-control form-control-modern" id="confirm_password" 
                                            name="confirm_password" required>
@@ -577,7 +645,7 @@ include 'header.php';
                                 
                                 <div class="col-12">
                                     <div class="alert alert-info">
-                                        <i class="fas fa-info-circle me-2"></i> Password requirements:
+                                        <i class="fas fa-info-circle me-2 text-primary"></i> Password requirements:
                                         <ul class="mb-0 mt-2">
                                             <li>Minimum 6 characters long</li>
                                             <li>Use a mix of letters and numbers</li>
@@ -629,6 +697,10 @@ include 'header.php';
                                                         $icon = 'fa-key';
                                                         $bgColor = 'bg-warning';
                                                     }
+                                                    elseif (strpos($activity['action'], 'Registered') !== false) {
+                                                        $icon = 'fa-user-plus';
+                                                        $bgColor = 'bg-success';
+                                                    }
                                                 ?>
                                                 <span class="badge <?php echo $bgColor; ?> me-2">
                                                     <i class="fas <?php echo $icon; ?> me-1"></i> <?php echo htmlspecialchars($activity['action']); ?>
@@ -639,6 +711,7 @@ include 'header.php';
                                             </small>
                                         </div>
                                         <p class="mb-0 text-muted small">
+                                            <i class="fas fa-info-circle me-1 text-primary"></i>
                                             <?php echo htmlspecialchars($activity['details']); ?>
                                         </p>
                                     </div>
@@ -658,37 +731,37 @@ include 'header.php';
         <!-- Security Tips Card -->
         <div class="card security-tip-card">
             <div class="card-body">
-                <h6 class="card-title fw-bold mb-3">
-                    <i class="fas fa-shield-alt text-success me-2"></i>Security Tips
+                <h6 class="card-title fw-bold mb-3 text-primary">
+                    <i class="fas fa-shield-alt me-2"></i>Security Best Practices
                 </h6>
                 <div class="row g-3">
                     <div class="col-md-6">
                         <div class="d-flex align-items-start gap-2">
-                            <i class="fas fa-check-circle text-success mt-1"></i>
+                            <i class="fas fa-check-circle text-primary mt-1"></i>
                             <small>Never share your password with anyone</small>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="d-flex align-items-start gap-2">
-                            <i class="fas fa-check-circle text-success mt-1"></i>
+                            <i class="fas fa-check-circle text-primary mt-1"></i>
                             <small>Use a strong, unique password for this account</small>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="d-flex align-items-start gap-2">
-                            <i class="fas fa-check-circle text-success mt-1"></i>
+                            <i class="fas fa-check-circle text-primary mt-1"></i>
                             <small>Always log out when leaving your workstation</small>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="d-flex align-items-start gap-2">
-                            <i class="fas fa-check-circle text-success mt-1"></i>
+                            <i class="fas fa-check-circle text-primary mt-1"></i>
                             <small>Report any suspicious activity to system administrator</small>
                         </div>
                     </div>
                     <div class="col-12">
                         <div class="d-flex align-items-start gap-2">
-                            <i class="fas fa-check-circle text-success mt-1"></i>
+                            <i class="fas fa-check-circle text-primary mt-1"></i>
                             <small>Keep your contact information up to date</small>
                         </div>
                     </div>
@@ -802,6 +875,17 @@ document.addEventListener('DOMContentLoaded', function() {
         passwordInput.addEventListener('keyup', checkPasswordStrength);
     }
 });
+
+// Auto-hide alerts after 5 seconds
+setTimeout(function() {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(function(alert) {
+        const bsAlert = new bootstrap.Alert(alert);
+        setTimeout(function() {
+            bsAlert.close();
+        }, 5000);
+    });
+}, 1000);
 </script>
 
 <?php include 'footer.php'; ?>

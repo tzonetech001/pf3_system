@@ -213,12 +213,14 @@ include 'header.php';
         border-radius: 15px;
         margin-bottom: 1.5rem;
         box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        border-left: 4px solid #0d47a1;
     }
     
     .table-card {
         border: none;
         border-radius: 15px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        background: white;
     }
     
     .nav-tabs-custom {
@@ -236,12 +238,12 @@ include 'header.php';
     }
     
     .nav-tabs-custom .nav-link:hover {
-        color: #A6EDCF ;
+        color: #0d47a1;
         background: transparent;
     }
     
     .nav-tabs-custom .nav-link.active {
-        color: #A6EDCF ;
+        color: #0d47a1;
         background: transparent;
     }
     
@@ -252,7 +254,7 @@ include 'header.php';
         left: 0;
         right: 0;
         height: 2px;
-        background: linear-gradient(135deg, #A6EDCF  0%, #A6EDCF  100%);
+        background: linear-gradient(135deg, #0d47a1 0%, #1976d2 100%);
     }
     
     .action-buttons {
@@ -265,7 +267,7 @@ include 'header.php';
         width: 35px;
         height: 35px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #A6EDCF  0%, #A6EDCF  100%);
+        background: linear-gradient(135deg, #0d47a1 0%, #1976d2 100%);
         color: white;
         display: flex;
         align-items: center;
@@ -297,11 +299,17 @@ include 'header.php';
         padding: 1rem;
         text-align: center;
         transition: all 0.3s ease;
+        border: 1px solid #e2e8f0;
     }
     
     .stats-card:hover {
         transform: translateY(-3px);
         box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        border-color: #0d47a1;
+    }
+    
+    .stats-card i {
+        color: #0d47a1;
     }
     
     .filter-input {
@@ -314,11 +322,112 @@ include 'header.php';
         border-radius: 10px;
         padding: 0.5rem 1rem;
     }
+    
+    .filter-input input:focus {
+        border-color: #0d47a1;
+        box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.1);
+    }
+    
+    .table th {
+        background: #e8eaf6;
+        color: #1a237e;
+        font-weight: 600;
+        border-bottom: 2px solid #0d47a1;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: #e3f2fd;
+    }
+    
+    .btn-primary {
+        background: #0d47a1;
+        border-color: #0d47a1;
+    }
+    
+    .btn-primary:hover {
+        background: #0a3a8a;
+        border-color: #0a3a8a;
+    }
+    
+    .btn-danger {
+        background: #dc3545;
+        border-color: #dc3545;
+    }
+    
+    .btn-warning {
+        background: #ff9800;
+        border-color: #ff9800;
+        color: white;
+    }
+    
+    .btn-warning:hover {
+        background: #e68900;
+        border-color: #e68900;
+        color: white;
+    }
+    
+    .btn-info {
+        background: #17a2b8;
+        border-color: #17a2b8;
+        color: white;
+    }
+    
+    .btn-info:hover {
+        background: #138496;
+        border-color: #138496;
+        color: white;
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        border-color: #6c757d;
+    }
+    
+    .btn-success {
+        background: #28a745;
+        border-color: #28a745;
+    }
+    
+    .btn-success:hover {
+        background: #218838;
+        border-color: #218838;
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, #0d47a1 0%, #1976d2 100%);
+        color: white;
+    }
+    
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+    
+    .modal-content {
+        border: none;
+        border-radius: 15px;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #0d47a1;
+        box-shadow: 0 0 0 0.25rem rgba(13, 71, 161, 0.15);
+    }
+    
+    .badge.bg-secondary {
+        background: #6c757d !important;
+    }
+    
+    .badge.bg-success {
+        background: #28a745 !important;
+    }
+    
+    .badge.bg-info {
+        background: #17a2b8 !important;
+    }
 </style>
 
 <div class="page-header d-flex justify-content-between align-items-center flex-wrap">
     <div>
-        <h4 class="mb-1 fw-bold">
+        <h4 class="mb-1 fw-bold text-primary">
             <i class="fas fa-users me-2"></i>Manage Users
         </h4>
         <p class="text-muted mb-0">View, edit, delete, and manage user accounts</p>
@@ -337,7 +446,7 @@ include 'header.php';
 <div class="row g-3 mb-4">
     <div class="col-md-4">
         <div class="stats-card">
-            <i class="fas fa-user-md fa-2x text-info mb-2"></i>
+            <i class="fas fa-user-md fa-2x mb-2"></i>
             <h5 class="mb-1">Doctors</h5>
             <div class="d-flex justify-content-center gap-3">
                 <span class="badge bg-success">Active: <?php echo $active_doctors; ?></span>
@@ -347,7 +456,7 @@ include 'header.php';
     </div>
     <div class="col-md-4">
         <div class="stats-card">
-            <i class="fas fa-user-shield fa-2x text-warning mb-2"></i>
+            <i class="fas fa-user-shield fa-2x mb-2"></i>
             <h5 class="mb-1">Police Officers</h5>
             <div class="d-flex justify-content-center gap-3">
                 <span class="badge bg-success">Active: <?php echo $active_police; ?></span>
@@ -357,7 +466,7 @@ include 'header.php';
     </div>
     <div class="col-md-4">
         <div class="stats-card">
-            <i class="fas fa-user-cog fa-2x text-danger mb-2"></i>
+            <i class="fas fa-user-cog fa-2x mb-2"></i>
             <h5 class="mb-1">Admins</h5>
             <div class="d-flex justify-content-center gap-3">
                 <span class="badge bg-success">Active: <?php echo $active_admins; ?></span>
@@ -413,7 +522,7 @@ include 'header.php';
                 <div class="clearfix"></div>
                 <div class="table-responsive">
                     <table class="table table-hover" id="doctorsTable">
-                        <thead class="table-light">
+                        <thead>
                             <tr>
                                 <th>ID</th>
                                 <th>Name</th>
@@ -484,7 +593,7 @@ include 'header.php';
                 <div class="clearfix"></div>
                 <div class="table-responsive">
                     <table class="table table-hover" id="policeTable">
-                        <thead class="table-light">
+                        <thead>
                             <tr>
                                 <th>ID</th>
                                 <th>Name</th>
@@ -555,7 +664,7 @@ include 'header.php';
                 <div class="clearfix"></div>
                 <div class="table-responsive">
                     <table class="table table-hover" id="adminsTable">
-                        <thead class="table-light">
+                        <thead>
                             <tr>
                                 <th>ID</th>
                                 <th>Username</th>
@@ -603,7 +712,7 @@ include 'header.php';
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         <?php else: ?>
-                                            <span class="badge bg-info">Current User</span>
+                                            <span class="badge bg-primary">Current User</span>
                                         <?php endif; ?>
                                     </div>
                                 </td>
@@ -782,7 +891,7 @@ include 'header.php';
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Register Doctor</button>
+                    <button type="submit" class="btn btn-primary">Register Doctor</button>
                 </div>
             </form>
         </div>
@@ -851,7 +960,7 @@ include 'header.php';
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Register Police Officer</button>
+                    <button type="submit" class="btn btn-primary">Register Police Officer</button>
                 </div>
             </form>
         </div>

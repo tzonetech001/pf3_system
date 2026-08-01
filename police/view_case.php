@@ -55,6 +55,7 @@ include 'header.php';
         border-radius: 12px;
         margin-bottom: 1.2rem;
         box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        border-left: 4px solid #0d47a1;
     }
     
     .page-header h4 {
@@ -71,19 +72,25 @@ include 'header.php';
         box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         margin-bottom: 1.2rem;
         transition: all 0.3s ease;
+        background: white;
     }
     
     .detail-card:hover {
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 5px 20px rgba(13, 71, 161, 0.1);
     }
     
     .detail-card .card-header {
         background: white;
-        border-bottom: 2px solid #f0f0f0;
+        border-bottom: 2px solid #e8eaf6;
         padding: 0.8rem 1.2rem;
         border-radius: 12px 12px 0 0;
         font-weight: 600;
         font-size: 15px;
+        color: #1a237e;
+    }
+    
+    .detail-card .card-header i {
+        color: #0d47a1;
     }
     
     .detail-card .card-body {
@@ -138,7 +145,59 @@ include 'header.php';
         box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
     
-    /* ===== ALERT STYLES - CENTERED ON SCREEN ===== */
+    .btn-primary {
+        background: #0d47a1;
+        border-color: #0d47a1;
+    }
+    
+    .btn-primary:hover {
+        background: #0a3a8a;
+        border-color: #0a3a8a;
+    }
+    
+    .btn-success {
+        background: #28a745;
+        border-color: #28a745;
+    }
+    
+    .btn-success:hover {
+        background: #218838;
+        border-color: #218838;
+    }
+    
+    .btn-danger {
+        background: #dc3545;
+        border-color: #dc3545;
+    }
+    
+    .btn-danger:hover {
+        background: #c82333;
+        border-color: #c82333;
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        border-color: #6c757d;
+    }
+    
+    .btn-secondary:hover {
+        background: #5a6268;
+        border-color: #5a6268;
+    }
+    
+    .btn-info {
+        background: #17a2b8;
+        border-color: #17a2b8;
+        color: white;
+    }
+    
+    .btn-info:hover {
+        background: #138496;
+        border-color: #138496;
+        color: white;
+    }
+    
+    /* ===== ALERT STYLES ===== */
     .alert-container {
         position: fixed;
         top: 50%;
@@ -253,7 +312,7 @@ include 'header.php';
         transform: rotate(90deg);
     }
     
-    /* ===== CONFIRMATION POPUP - CENTERED ===== */
+    /* ===== CONFIRMATION POPUP ===== */
     .confirm-overlay {
         position: fixed;
         top: 0;
@@ -275,7 +334,7 @@ include 'header.php';
     .confirm-box {
         background: white;
         border-radius: 20px;
-        padding: 2.5rem;
+        padding: 2rem;
         max-width: 450px;
         width: 90%;
         text-align: center;
@@ -285,13 +344,13 @@ include 'header.php';
     }
     
     .confirm-box .icon {
-        font-size: 56px;
-        margin-bottom: 1rem;
+        font-size: 48px;
+        margin-bottom: 0.8rem;
         display: block;
     }
     
     .confirm-box .title {
-        font-size: 20px;
+        font-size: 18px;
         font-weight: 700;
         margin-bottom: 0.5rem;
         color: #2d3748;
@@ -322,6 +381,7 @@ include 'header.php';
         gap: 0.8rem;
         justify-content: center;
         margin-top: 1.5rem;
+        flex-wrap: wrap;
     }
     
     .confirm-box .btn-group-confirm .btn {
@@ -405,8 +465,8 @@ include 'header.php';
     }
     
     .reject-note-area textarea:focus {
-        border-color: #dc3545;
-        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+        border-color: #0d47a1;
+        box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.15);
         outline: none;
     }
     
@@ -460,8 +520,8 @@ include 'header.php';
     }
     
     .status-step.active::before {
-        background: #A6EDCF;
-        box-shadow: 0 0 0 2px #A6EDCF;
+        background: #0d47a1;
+        box-shadow: 0 0 0 2px #0d47a1;
     }
     
     .status-step.completed::before {
@@ -489,16 +549,16 @@ include 'header.php';
     
     /* ===== SMS MESSAGE PREVIEW ===== */
     .sms-preview {
-        background: #f8f9fa;
+        background: #e3f2fd;
         border-radius: 10px;
         padding: 1rem;
         margin-top: 0.8rem;
-        border-left: 4px solid #A6EDCF;
+        border-left: 4px solid #0d47a1;
     }
     
     .sms-preview .sms-label {
         font-size: 12px;
-        color: #6c757d;
+        color: #0d47a1;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -569,12 +629,26 @@ include 'header.php';
     }
     
     .status-card.pending {
-        background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-        border: 2px solid #ffc107;
+        background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+        border: 2px solid #0d47a1;
     }
     
     .status-card.pending .status-title {
-        color: #856404;
+        color: #0d47a1;
+    }
+    
+    /* ===== RESEND BUTTON ===== */
+    .resend-btn {
+        padding: 0.4rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 13px;
+        transition: all 0.3s ease;
+    }
+    
+    .resend-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
     
     /* ===== RESPONSIVE ===== */
@@ -634,7 +708,7 @@ include 'header.php';
         }
         
         .confirm-box {
-            padding: 1.8rem;
+            padding: 1.5rem;
         }
         
         .confirm-box .btn-group-confirm {
@@ -702,7 +776,7 @@ include 'header.php';
         <button type="button" class="close-confirm" onclick="closeConfirm('approveConfirm')">&times;</button>
         <span class="icon">✅</span>
         <div class="title">Approve Case</div>
-        <div class="subtitle">Are you sure you want to approve this case?</div>
+        <div class="subtitle">Are you sure you want to approve this case? SMS will be sent automatically.</div>
         <div class="details">
             <strong>Patient:</strong> <?php echo htmlspecialchars($case['full_name']); ?><br>
             <strong>PF3 Number:</strong> #<?php echo htmlspecialchars($pf3); ?><br>
@@ -714,14 +788,14 @@ include 'header.php';
             <div class="sms-label">📱 SMS to be sent to patient:</div>
             <div class="sms-message" id="approveSmsPreview">
                 <strong>APPROVED</strong> - <?php echo htmlspecialchars($case['full_name']); ?>, application #<?php echo htmlspecialchars($pf3); ?> APPROVED. 
-                RB: <span id="previewRbNumber"></span>. Visit hospital for medical exam. Thank you!
+                RB: <span id="previewRbNumber"></span>. Visit hospital. Thank you!
             </div>
             <div class="sms-phone">📞 To: <?php echo htmlspecialchars($case['patient_phone']); ?></div>
         </div>
         
         <div class="btn-group-confirm">
             <button type="button" class="btn btn-cancel" onclick="closeConfirm('approveConfirm')">Cancel</button>
-            <button type="button" class="btn btn-approve" id="confirmApproveBtn">Approve</button>
+            <button type="button" class="btn btn-approve" id="confirmApproveBtn">Approve & Send SMS</button>
         </div>
     </div>
 </div>
@@ -732,7 +806,7 @@ include 'header.php';
         <button type="button" class="close-confirm" onclick="closeConfirm('rejectConfirm')">&times;</button>
         <span class="icon">❌</span>
         <div class="title">Reject Case</div>
-        <div class="subtitle">Are you sure you want to reject this case?</div>
+        <div class="subtitle">Are you sure you want to reject this case? SMS will be sent automatically.</div>
         <div class="details">
             <strong>Patient:</strong> <?php echo htmlspecialchars($case['full_name']); ?><br>
             <strong>PF3 Number:</strong> #<?php echo htmlspecialchars($pf3); ?>
@@ -757,7 +831,7 @@ include 'header.php';
         
         <div class="btn-group-confirm">
             <button type="button" class="btn btn-cancel" onclick="closeConfirm('rejectConfirm')">Cancel</button>
-            <button type="button" class="btn btn-reject" id="confirmRejectBtn">Reject</button>
+            <button type="button" class="btn btn-reject" id="confirmRejectBtn">Reject & Send SMS</button>
         </div>
     </div>
 </div>
@@ -765,8 +839,8 @@ include 'header.php';
 <!-- ===== PAGE HEADER ===== -->
 <div class="page-header d-flex justify-content-between align-items-center flex-wrap">
     <div>
-        <h4 class="mb-1 fw-bold">
-            <i class="fas fa-file-alt me-2 text-primary"></i>Case Details
+        <h4 class="mb-1 fw-bold text-primary">
+            <i class="fas fa-file-alt me-2"></i>Case Details
         </h4>
         <p class="text-muted mb-0">PF3 Number: <strong><?php echo htmlspecialchars($pf3); ?></strong></p>
     </div>
@@ -796,6 +870,14 @@ include 'header.php';
             </button>
         <?php endif; ?>
         
+        <!-- Resend SMS Button (only for approved/rejected) -->
+        <?php if ($case['status'] == 'APPROVED' || $case['status'] == 'REJECTED'): ?>
+            <a href="resend_sms.php?pf3=<?php echo $pf3; ?>" class="btn btn-info action-btn resend-btn" 
+               onclick="return confirm('Are you sure you want to resend SMS to patient?')">
+                <i class="fas fa-sms me-2"></i>Resend SMS
+            </a>
+        <?php endif; ?>
+        
         <!-- Back Button -->
         <a href="cases.php?status=<?php echo $case['status']; ?>" class="btn btn-secondary action-btn">
             <i class="fas fa-arrow-left me-2"></i>Back
@@ -810,7 +892,7 @@ include 'header.php';
         <!-- Patient Information -->
         <div class="card detail-card">
             <div class="card-header">
-                <i class="fas fa-user me-2 text-primary"></i>Patient Information
+                <i class="fas fa-user me-2"></i>Patient Information
             </div>
             <div class="card-body">
                 <div class="info-grid">
@@ -853,7 +935,7 @@ include 'header.php';
         <!-- Case Information -->
         <div class="card detail-card">
             <div class="card-header">
-                <i class="fas fa-folder-open me-2 text-primary"></i>Case Information
+                <i class="fas fa-folder-open me-2"></i>Case Information
             </div>
             <div class="card-body">
                 <div class="info-grid">
@@ -906,7 +988,7 @@ include 'header.php';
         <!-- Status Timeline -->
         <div class="card detail-card">
             <div class="card-header">
-                <i class="fas fa-history me-2 text-primary"></i>Case Timeline
+                <i class="fas fa-history me-2"></i>Case Timeline
             </div>
             <div class="card-body">
                 <div class="status-timeline">
@@ -938,7 +1020,7 @@ include 'header.php';
                         <div class="d-flex justify-content-between">
                             <div>
                                 <strong class="<?php echo $case['status'] == 'APPROVED' ? 'text-success' : 'text-danger'; ?>">
-                                    <?php echo $case['status'] == 'APPROVED' ? '✅ Approved' : '❌ Rejected'; ?>
+                                    <?php echo $case['status'] == 'APPROVED' ? 'Approved' : 'Rejected'; ?>
                                 </strong>
                                 <div class="text-muted small">
                                     <?php if ($case['status'] == 'APPROVED' && $case['rb_number']): ?>
@@ -974,6 +1056,12 @@ include 'header.php';
                 <div class="status-detail">
                     <i class="fas fa-hospital me-1"></i> Patient should visit hospital for medical examination.
                 </div>
+                <div class="mt-2">
+                    <a href="resend_sms.php?pf3=<?php echo $pf3; ?>" class="btn btn-sm btn-info resend-btn" 
+                       onclick="return confirm('Resend SMS to patient?')">
+                        <i class="fas fa-sms me-1"></i> Resend SMS
+                    </a>
+                </div>
             <?php elseif ($case['status'] == 'REJECTED'): ?>
                 <span class="icon">❌</span>
                 <div class="status-title">REJECTED</div>
@@ -984,6 +1072,12 @@ include 'header.php';
                         <?php echo nl2br(htmlspecialchars($case['police_notes'])); ?>
                     </div>
                 <?php endif; ?>
+                <div class="mt-2">
+                    <a href="resend_sms.php?pf3=<?php echo $pf3; ?>" class="btn btn-sm btn-info resend-btn" 
+                       onclick="return confirm('Resend SMS to patient?')">
+                        <i class="fas fa-sms me-1"></i> Resend SMS
+                    </a>
+                </div>
             <?php else: ?>
                 <span class="icon">⏳</span>
                 <div class="status-title">PENDING</div>
@@ -1005,9 +1099,15 @@ include 'header.php';
                     <div class="sms-label">📱 Message:</div>
                     <div class="sms-message">
                         <strong>APPROVED</strong> - <?php echo htmlspecialchars($case['full_name']); ?>, application #<?php echo htmlspecialchars($pf3); ?> APPROVED. 
-                        RB: <?php echo htmlspecialchars($case['rb_number']); ?>. Visit hospital for medical exam. Thank you!
+                        RB: <?php echo htmlspecialchars($case['rb_number']); ?>. Visit hospital. Thank you!
                     </div>
                     <div class="sms-phone">📞 To: <?php echo htmlspecialchars($case['patient_phone']); ?></div>
+                </div>
+                <div class="mt-2 text-center">
+                    <a href="resend_sms.php?pf3=<?php echo $pf3; ?>" class="btn btn-sm btn-info resend-btn" 
+                       onclick="return confirm('Resend SMS to patient?')">
+                        <i class="fas fa-sms me-1"></i> Resend SMS
+                    </a>
                 </div>
             </div>
         </div>
@@ -1025,6 +1125,12 @@ include 'header.php';
                         Contact police. Thank you!
                     </div>
                     <div class="sms-phone">📞 To: <?php echo htmlspecialchars($case['patient_phone']); ?></div>
+                </div>
+                <div class="mt-2 text-center">
+                    <a href="resend_sms.php?pf3=<?php echo $pf3; ?>" class="btn btn-sm btn-info resend-btn" 
+                       onclick="return confirm('Resend SMS to patient?')">
+                        <i class="fas fa-sms me-1"></i> Resend SMS
+                    </a>
                 </div>
             </div>
         </div>
@@ -1117,6 +1223,9 @@ document.getElementById('confirmApproveBtn').addEventListener('click', function(
         alert('Error: RB number not generated. Please try again.');
         return;
     }
+    // Show loading state
+    this.textContent = 'Processing...';
+    this.disabled = true;
     document.getElementById('approveForm').submit();
 });
 
@@ -1135,6 +1244,10 @@ document.getElementById('confirmRejectBtn').addEventListener('click', function()
         document.getElementById('rejectNote').focus();
         return;
     }
+    
+    // Show loading state
+    this.textContent = 'Processing...';
+    this.disabled = true;
     
     // Set the note in hidden field and submit
     document.getElementById('hiddenRejectNote').value = note;

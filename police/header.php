@@ -77,7 +77,7 @@ if (!isset($_SESSION['user_id'])) {
 
         .menu-item {
             padding: 0.75rem 1.5rem;
-            margin: 0.25rem 0;
+            margin: 0.25rem 0.5rem;
             display: flex;
             align-items: center;
             gap: 12px;
@@ -85,16 +85,18 @@ if (!isset($_SESSION['user_id'])) {
             text-decoration: none;
             transition: all 0.3s ease;
             position: relative;
+            border-radius: 10px;
         }
 
         .menu-item:hover {
-            background: #f7fafc;
-            color:  #A6EDCF ;
+            background: #e3f2fd;
+            color: #0d47a1;
         }
 
         .menu-item.active {
-            background: linear-gradient(135deg,  #A6EDCD 0%,  #A6EDCF 100%);
+            background: linear-gradient(135deg, #0d47a1 0%, #1976d2 100%);
             color: white;
+            box-shadow: 0 4px 15px rgba(13, 71, 161, 0.3);
         }
 
         .menu-item i {
@@ -119,13 +121,13 @@ if (!isset($_SESSION['user_id'])) {
             font-size: 1.1rem;
             cursor: pointer;
             transition: all 0.3s ease;
-            background: linear-gradient(135deg,  #A6EDCD 0%,  #A6EDCF 100%);
+            background: linear-gradient(135deg, #0d47a1 0%, #1976d2 100%);
             color: white;
         }
 
         .avatar:hover {
             transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 15px rgba(13, 71, 161, 0.3);
         }
 
         /* Dropdown Menu */
@@ -150,6 +152,17 @@ if (!isset($_SESSION['user_id'])) {
             transform: translateY(0);
         }
 
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .dropdown-item:hover {
+            background: #e3f2fd;
+            padding-left: 1.25rem;
+            color: #0d47a1;
+        }
+
         /* Mobile Sidebar Overlay */
         .sidebar-overlay {
             position: fixed;
@@ -171,14 +184,14 @@ if (!isset($_SESSION['user_id'])) {
             background: transparent;
             border: none;
             font-size: 1.5rem;
-            color: #A6EDCF ;
-        }
+            color: #4a5568;
+            cursor: pointer;
             padding: 0.5rem;
             transition: all 0.3s ease;
         }
 
         .toggle-btn:hover {
-            color:  #A6EDCF ;
+            color: #0d47a1;
         }
 
         /* Logo Section */
@@ -196,7 +209,7 @@ if (!isset($_SESSION['user_id'])) {
         .logo-text {
             font-size: 1.25rem;
             font-weight: 700;
-            background: linear-gradient(135deg,  #A6EDCD 0%,  #A6EDCF 100%);
+            background: linear-gradient(135deg, #0d47a1 0%, #1976d2 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -231,7 +244,7 @@ if (!isset($_SESSION['user_id'])) {
         }
 
         .sidebar::-webkit-scrollbar-thumb {
-            background: #cbd5e0;
+            background: #90caf9;
             border-radius: 5px;
         }
 
@@ -249,6 +262,74 @@ if (!isset($_SESSION['user_id'])) {
 
         .menu-item {
             animation: slideIn 0.3s ease forwards;
+        }
+
+        /* Button Overrides */
+        .btn-primary {
+            background: #0d47a1;
+            border-color: #0d47a1;
+        }
+
+        .btn-primary:hover {
+            background: #0a3a8a;
+            border-color: #0a3a8a;
+        }
+
+        .btn-primary:focus {
+            box-shadow: 0 0 0 0.25rem rgba(13, 71, 161, 0.25);
+        }
+
+        .btn-success {
+            background: #28a745;
+            border-color: #28a745;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            border-color: #218838;
+        }
+
+        .btn-warning {
+            background: #ff9800;
+            border-color: #ff9800;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #e68900;
+            border-color: #e68900;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            border-color: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+            border-color: #c82333;
+        }
+
+        .badge.bg-primary {
+            background: #0d47a1 !important;
+        }
+
+        .text-primary {
+            color: #0d47a1 !important;
+        }
+
+        .border-primary {
+            border-color: #0d47a1 !important;
+        }
+
+        .bg-primary {
+            background: #0d47a1 !important;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #0d47a1;
+            box-shadow: 0 0 0 0.25rem rgba(13, 71, 161, 0.15);
         }
     </style>
 </head>
@@ -343,12 +424,14 @@ if (!isset($_SESSION['user_id'])) {
                 <i class="fas fa-times-circle"></i>
                 <span>Rejected Cases</span>
             </a>
-             <!-- NEW: All Requests -->
-        <a href="all_requests.php" class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'all_requests.php' ? 'active' : ''; ?>">
-            <i class="fas fa-list-alt"></i>
-            <span>All Requests</span>
-        </a>
-            <!-- Added My Profile and Logout to Sidebar -->
+            
+            <!-- All Requests -->
+            <a href="all_requests.php" class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'all_requests.php' ? 'active' : ''; ?>">
+                <i class="fas fa-list-alt"></i>
+                <span>All Requests</span>
+            </a>
+            
+            <!-- Divider -->
             <div class="mt-4 pt-2 border-top">
                 <a href="profile.php" class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'profile.php' ? 'active' : ''; ?>">
                     <i class="fas fa-user-circle"></i>

@@ -88,12 +88,12 @@ if (!isset($_SESSION['user_id'])) {
         }
 
         .menu-item:hover {
-            background: #f7fafc;
-            color: #A6EDCF ;
+            background: #e3f2fd;
+            color: #0d47a1;
         }
 
         .menu-item.active {
-            background: linear-gradient(135deg, #A6EDCF  0%, #A6EDCF  100%);
+            background: linear-gradient(135deg, #0d47a1 0%, #1976d2 100%);
             color: white;
         }
 
@@ -119,13 +119,13 @@ if (!isset($_SESSION['user_id'])) {
             font-size: 1.1rem;
             cursor: pointer;
             transition: all 0.3s ease;
-            background: linear-gradient(135deg, #A6EDCF  0%, #A6EDCF  100%);
+            background: linear-gradient(135deg, #0d47a1 0%, #1976d2 100%);
             color: white;
         }
 
         .avatar:hover {
             transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 15px rgba(13, 71, 161, 0.3);
         }
 
         /* Dropdown Menu */
@@ -178,7 +178,7 @@ if (!isset($_SESSION['user_id'])) {
         }
 
         .toggle-btn:hover {
-            color: #A6EDCF ;
+            color: #0d47a1;
         }
 
         /* Logo Section */
@@ -196,7 +196,7 @@ if (!isset($_SESSION['user_id'])) {
         .logo-text {
             font-size: 1.25rem;
             font-weight: 700;
-            background: linear-gradient(135deg, #A6EDCF  0%, #A6EDCF  100%);
+            background: linear-gradient(135deg, #0d47a1 0%, #1976d2 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -231,7 +231,7 @@ if (!isset($_SESSION['user_id'])) {
         }
 
         .sidebar::-webkit-scrollbar-thumb {
-            background: #cbd5e0;
+            background: #90caf9;
             border-radius: 5px;
         }
 
@@ -258,7 +258,7 @@ if (!isset($_SESSION['user_id'])) {
         }
         
         .modal-header {
-            background: linear-gradient(135deg, #A6EDCF  0%, #A6EDCF  100%);
+            background: linear-gradient(135deg, #0d47a1 0%, #1976d2 100%);
             color: white;
             border-radius: 20px 20px 0 0;
             padding: 1.25rem 1.5rem;
@@ -280,8 +280,35 @@ if (!isset($_SESSION['user_id'])) {
         }
         
         .form-control-modal:focus, .form-select-modal:focus {
-            border-color: #A6EDCF ;
-            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+            border-color: #0d47a1;
+            box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.15);
+        }
+
+        /* Blue theme overrides */
+        .btn-primary {
+            background: #0d47a1;
+            border-color: #0d47a1;
+        }
+
+        .btn-primary:hover {
+            background: #0a3a8a;
+            border-color: #0a3a8a;
+        }
+
+        .btn-primary:focus {
+            box-shadow: 0 0 0 0.25rem rgba(13, 71, 161, 0.25);
+        }
+
+        .badge.bg-primary {
+            background: #0d47a1 !important;
+        }
+
+        .text-primary {
+            color: #0d47a1 !important;
+        }
+
+        .border-primary {
+            border-color: #0d47a1 !important;
         }
     </style>
 </head>
@@ -374,6 +401,15 @@ if (!isset($_SESSION['user_id'])) {
             <a href="audit_log.php" class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'audit_log.php' ? 'active' : ''; ?>">
                 <i class="fas fa-history"></i>
                 <span>Audit Log</span>
+            </a>
+            <a href="profile.php" class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'profile.php' ? 'active' : ''; ?>">
+                                <i class="fas fa-user-circle fa-lg"></i>
+                                <span>My Profile</span>
+                            </a>
+
+            <a href="../logout.php" class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'logout.php' ? 'active' : ''; ?>">
+                                <i class="fas fa-sign-out-alt fa-lg"></i>
+                                <span>Logout</span>
             </a>
         </div>
     </div>

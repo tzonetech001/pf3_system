@@ -33,6 +33,46 @@ $doctor_stats = $pdo->query("
     LIMIT 10
 ")->fetchAll();
 
+// Get gender distribution
+$gender_stats = $pdo->query("
+    SELECT gender, COUNT(*) as count 
+    FROM patients 
+    GROUP BY gender
+")->fetchAll(PDO::FETCH_KEY_PAIR);
+
+// Get incidents by type
+$incident_stats = $pdo->query("
+    SELECT type_of_incident, COUNT(*) as count 
+    FROM pf3_cases 
+    GROUP BY type_of_incident
+    ORDER BY count DESC
+    LIMIT 10
+")->fetchAll(PDO::FETCH_KEY_PAIR);
+
+// Get monthly patient registrations
+$patient_trends = $pdo->query("
+    SELECT 
+        DATE_FORMAT(created_at, '%Y-%m') as month,
+        COUNT(*) as count
+    FROM patients 
+    WHERE created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+    GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+    ORDER BY month DESC
+    LIMIT 6
+")->fetchAll();
+
+// Get police performance
+$police_stats = $pdo->query("
+    SELECT 
+        CONCAT(p.first_name, ' ', p.last_name) as officer_name,
+        COUNT(c.id) as case_count
+    FROM police_officers p
+    LEFT JOIN pf3_cases c ON c.police_notes IS NOT NULL
+    GROUP BY p.id
+    ORDER BY case_count DESC
+    LIMIT 10
+")->fetchAll();
+
 include 'header.php';
 ?>
 
@@ -56,18 +96,30 @@ include 'header.php';
         box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         margin-bottom: 1.5rem;
         background: white;
+        height: 100%;
     }
     
     .chart-card .card-header {
         background: white;
         border-bottom: 2px solid #e8eaf6;
-        padding: 1.25rem 1.5rem;
+        padding: 1rem 1.25rem;
         border-radius: 15px 15px 0 0;
     }
     
     .chart-card .card-header h6 {
         color: #1a237e;
         font-weight: 600;
+        font-size: 0.95rem;
+    }
+    
+    .chart-card .card-body {
+        padding: 1rem;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+        width: 100%;
     }
     
     .stat-badge {
@@ -119,11 +171,37 @@ include 'header.php';
     .progress {
         border-radius: 10px;
         background-color: #e8eaf6;
+        height: 8px;
     }
     
     .progress-bar {
         border-radius: 10px;
         background: linear-gradient(135deg, #0d47a1, #1976d2);
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 0.75rem;
+        margin-top: 0.75rem;
+    }
+    
+    .stats-grid .stat-item {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 0.75rem;
+        text-align: center;
+    }
+    
+    .stats-grid .stat-item .number {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #0d47a1;
+    }
+    
+    .stats-grid .stat-item .label {
+        font-size: 0.7rem;
+        color: #6c757d;
     }
 </style>
 
@@ -136,8 +214,50 @@ include 'header.php';
     </div>
 </div>
 
+<!-- Summary Statistics -->
+<div class="row g-3 mb-4">
+    <?php
+    $total_users = $pdo->query("SELECT COUNT(*) FROM doctors")->fetchColumn() + 
+                  $pdo->query("SELECT COUNT(*) FROM police_officers")->fetchColumn() + 
+                  $pdo->query("SELECT COUNT(*) FROM admins")->fetchColumn();
+    $total_patients = $pdo->query("SELECT COUNT(*) FROM patients")->fetchColumn();
+    $total_cases = $pdo->query("SELECT COUNT(*) FROM pf3_cases")->fetchColumn();
+    $total_reports = $pdo->query("SELECT COUNT(*) FROM medical_reports")->fetchColumn();
+    $pending_cases = $pdo->query("SELECT COUNT(*) FROM pf3_cases WHERE status = 'PENDING'")->fetchColumn();
+    $approved_cases = $pdo->query("SELECT COUNT(*) FROM pf3_cases WHERE status = 'APPROVED'")->fetchColumn();
+    ?>
+    <div class="col-md-3 col-6">
+        <div class="summary-box">
+            <i class="fas fa-users text-primary"></i>
+            <h5><?php echo $total_users; ?></h5>
+            <small>Total Users</small>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="summary-box">
+            <i class="fas fa-user-injured text-info"></i>
+            <h5><?php echo $total_patients; ?></h5>
+            <small>Total Patients</small>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="summary-box">
+            <i class="fas fa-folder-open text-warning"></i>
+            <h5><?php echo $total_cases; ?></h5>
+            <small>Total Cases</small>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="summary-box">
+            <i class="fas fa-file-medical text-success"></i>
+            <h5><?php echo $total_reports; ?></h5>
+            <small>Medical Reports</small>
+        </div>
+    </div>
+</div>
+
+<!-- Row 1: Case Status & Monthly Trends -->
 <div class="row g-4">
-    <!-- Case Status Chart -->
     <div class="col-lg-6">
         <div class="card chart-card">
             <div class="card-header">
@@ -146,7 +266,9 @@ include 'header.php';
                 </h6>
             </div>
             <div class="card-body">
-                <canvas id="statusChart" height="280"></canvas>
+                <div class="chart-container">
+                    <canvas id="statusChart"></canvas>
+                </div>
                 <div class="row mt-3 text-center">
                     <div class="col-4">
                         <div class="stat-badge bg-warning bg-opacity-10 text-warning">
@@ -171,7 +293,6 @@ include 'header.php';
         </div>
     </div>
     
-    <!-- Monthly Trends Chart -->
     <div class="col-lg-6">
         <div class="card chart-card">
             <div class="card-header">
@@ -180,14 +301,72 @@ include 'header.php';
                 </h6>
             </div>
             <div class="card-body">
-                <canvas id="trendsChart" height="280"></canvas>
+                <div class="chart-container">
+                    <canvas id="trendsChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Row 2: Gender Distribution & Incident Types -->
 <div class="row g-4 mt-2">
-    <!-- Doctor Performance -->
+    <div class="col-lg-6">
+        <div class="card chart-card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-venus-mars me-2 text-primary"></i>Gender Distribution
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="genderChart"></canvas>
+                </div>
+                <div class="stats-grid">
+                    <?php foreach ($gender_stats as $gender => $count): ?>
+                    <div class="stat-item">
+                        <div class="number"><?php echo $count; ?></div>
+                        <div class="label"><?php echo $gender; ?></div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card chart-card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2 text-primary"></i>Incident Types
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="incidentChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Row 3: Patient Registrations & Doctor Performance -->
+<div class="row g-4 mt-2">
+    <div class="col-lg-6">
+        <div class="card chart-card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-user-plus me-2 text-primary"></i>Monthly Patient Registrations
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="patientChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <div class="col-lg-6">
         <div class="card chart-card">
             <div class="card-header">
@@ -235,53 +414,20 @@ include 'header.php';
             </div>
         </div>
     </div>
-    
-    <!-- System Summary -->
-    <div class="col-lg-6">
+</div>
+
+<!-- Row 4: Police Performance -->
+<div class="row g-4 mt-2">
+    <div class="col-lg-12">
         <div class="card chart-card">
             <div class="card-header">
                 <h6 class="mb-0">
-                    <i class="fas fa-info-circle me-2 text-primary"></i>System Summary
+                    <i class="fas fa-user-shield me-2 text-warning"></i>Police Officer Performance
                 </h6>
             </div>
             <div class="card-body">
-                <?php
-                $total_users = $pdo->query("SELECT COUNT(*) FROM doctors")->fetchColumn() + 
-                              $pdo->query("SELECT COUNT(*) FROM police_officers")->fetchColumn() + 
-                              $pdo->query("SELECT COUNT(*) FROM admins")->fetchColumn();
-                $total_patients = $pdo->query("SELECT COUNT(*) FROM patients")->fetchColumn();
-                $total_cases = $pdo->query("SELECT COUNT(*) FROM pf3_cases")->fetchColumn();
-                $total_reports = $pdo->query("SELECT COUNT(*) FROM medical_reports")->fetchColumn();
-                ?>
-                <div class="row g-3">
-                    <div class="col-6">
-                        <div class="summary-box">
-                            <i class="fas fa-users text-primary"></i>
-                            <h5><?php echo $total_users; ?></h5>
-                            <small>Total Users</small>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="summary-box">
-                            <i class="fas fa-user-injured text-info"></i>
-                            <h5><?php echo $total_patients; ?></h5>
-                            <small>Total Patients</small>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="summary-box">
-                            <i class="fas fa-folder-open text-warning"></i>
-                            <h5><?php echo $total_cases; ?></h5>
-                            <small>Total Cases</small>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="summary-box">
-                            <i class="fas fa-file-medical text-success"></i>
-                            <h5><?php echo $total_reports; ?></h5>
-                            <small>Medical Reports</small>
-                        </div>
-                    </div>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="policeChart"></canvas>
                 </div>
             </div>
         </div>
@@ -290,6 +436,20 @@ include 'header.php';
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+    // Color palette
+    const colors = {
+        blue: '#0d47a1',
+        lightBlue: '#1976d2',
+        green: '#28a745',
+        red: '#dc3545',
+        orange: '#ff9800',
+        purple: '#6f42c1',
+        teal: '#20c997',
+        pink: '#e83e8c',
+        indigo: '#6610f2',
+        cyan: '#17a2b8'
+    };
+
     // Status Pie Chart
     const statusCtx = document.getElementById('statusChart').getContext('2d');
     new Chart(statusCtx, {
@@ -308,14 +468,15 @@ include 'header.php';
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     position: 'bottom',
                     labels: {
                         usePointStyle: true,
                         pointStyle: 'circle',
-                        padding: 20
+                        padding: 15,
+                        font: { size: 11 }
                     }
                 }
             },
@@ -357,23 +518,162 @@ include 'header.php';
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     position: 'bottom',
                     labels: {
                         usePointStyle: true,
                         pointStyle: 'circle',
-                        padding: 20
+                        padding: 15,
+                        font: { size: 11 }
                     }
                 }
             },
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
-                    }
+                    ticks: { stepSize: 1 }
+                }
+            }
+        }
+    });
+
+    // Gender Chart
+    const genderCtx = document.getElementById('genderChart').getContext('2d');
+    const genderLabels = <?php echo json_encode(array_keys($gender_stats)); ?>;
+    const genderData = <?php echo json_encode(array_values($gender_stats)); ?>;
+    const genderColors = ['#0d47a1', '#e83e8c', '#6f42c1'];
+
+    new Chart(genderCtx, {
+        type: 'bar',
+        data: {
+            labels: genderLabels,
+            datasets: [{
+                label: 'Patients',
+                data: genderData,
+                backgroundColor: genderColors.slice(0, genderData.length),
+                borderRadius: 8,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                }
+            }
+        }
+    });
+
+    // Incident Types Chart
+    const incidentCtx = document.getElementById('incidentChart').getContext('2d');
+    const incidentLabels = <?php echo json_encode(array_keys($incident_stats)); ?>;
+    const incidentData = <?php echo json_encode(array_values($incident_stats)); ?>;
+
+    new Chart(incidentCtx, {
+        type: 'bar',
+        data: {
+            labels: incidentLabels,
+            datasets: [{
+                label: 'Cases',
+                data: incidentData,
+                backgroundColor: [
+                    '#0d47a1', '#1976d2', '#2196f3', '#42a5f5',
+                    '#64b5f6', '#90caf9', '#bbdefb', '#e3f2fd'
+                ],
+                borderRadius: 8,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                }
+            }
+        }
+    });
+
+    // Patient Registrations Chart
+    const patientCtx = document.getElementById('patientChart').getContext('2d');
+    const patientMonths = <?php echo json_encode(array_reverse(array_column($patient_trends, 'month'))); ?>;
+    const patientCounts = <?php echo json_encode(array_reverse(array_column($patient_trends, 'count'))); ?>;
+
+    new Chart(patientCtx, {
+        type: 'bar',
+        data: {
+            labels: patientMonths.map(m => {
+                const date = new Date(m + '-01');
+                return date.toLocaleDateString('en', { month: 'short', year: 'numeric' });
+            }),
+            datasets: [{
+                label: 'New Patients',
+                data: patientCounts,
+                backgroundColor: 'rgba(13, 71, 161, 0.7)',
+                borderColor: '#0d47a1',
+                borderWidth: 2,
+                borderRadius: 8,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                }
+            }
+        }
+    });
+
+    // Police Performance Chart
+    const policeCtx = document.getElementById('policeChart').getContext('2d');
+    const policeNames = <?php echo json_encode(array_column($police_stats, 'officer_name')); ?>;
+    const policeCases = <?php echo json_encode(array_column($police_stats, 'case_count')); ?>;
+
+    new Chart(policeCtx, {
+        type: 'bar',
+        data: {
+            labels: policeNames,
+            datasets: [{
+                label: 'Cases Processed',
+                data: policeCases,
+                backgroundColor: 'rgba(255, 152, 0, 0.7)',
+                borderColor: '#ff9800',
+                borderWidth: 2,
+                borderRadius: 8,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
                 }
             }
         }

@@ -95,9 +95,8 @@ function sendSMS($phone, $message) {
     
     // ============================================================
     // CRITICAL: Remove ALL emojis and special characters
-    // Beem API only accepts plain text (ASCII)
     // ============================================================
-    // Remove emojis (✅, ❌, 📱, etc.)
+    // Remove emojis
     $message = preg_replace('/[\x{1F600}-\x{1F64F}]/u', '', $message);
     $message = preg_replace('/[\x{1F300}-\x{1F5FF}]/u', '', $message);
     $message = preg_replace('/[\x{1F680}-\x{1F6FF}]/u', '', $message);
@@ -106,8 +105,8 @@ function sendSMS($phone, $message) {
     $message = preg_replace('/[\x{1F900}-\x{1F9FF}]/u', '', $message);
     $message = preg_replace('/[\x{1F700}-\x{1F77F}]/u', '', $message);
     
-    // Remove other special characters that might cause issues
-    $message = str_replace(['*', '_', '~', '`', '|', '>', '<'], '', $message);
+    // Remove special characters that might cause issues
+    $message = str_replace(['*', '_', '~', '`', '|', '>', '<', '✅', '❌', '📱', '📞'], '', $message);
     
     // Remove multiple spaces
     $message = preg_replace('/\s+/', ' ', $message);
@@ -115,14 +114,24 @@ function sendSMS($phone, $message) {
     // Trim
     $message = trim($message);
     
+    // ============================================================
+    // CRITICAL FIX: If message is empty after cleaning, use a fallback
+    // ============================================================
+    if (empty($message)) {
+        // Fallback message - simple and clean
+        $message = "PF3 SYS: Your application status has been updated. Please contact your nearest police station for more information. Thank you!";
+        error_log("SMS: Message was empty after cleaning, using fallback message");
+    }
+    
     // Limit message to 155 characters (max allowed by Beem)
     if (strlen($message) > 155) {
         $message = substr($message, 0, 152) . '...';
     }
     
-    // If message is empty after cleaning, return error
+    // Final check - if still empty, use emergency fallback
     if (empty($message)) {
-        return ['success' => false, 'message' => 'Message is empty after cleaning'];
+        $message = "PF3 SYS: Your application status has been updated. Contact police for details.";
+        error_log("SMS: Emergency fallback message used");
     }
     
     // Prepare data for Beem API
@@ -189,51 +198,6 @@ function sendSMS($phone, $message) {
 }
 
 /**
- * Send PF3 Application SMS Notification - SIMPLE VERSION
- * @param string $phone Patient phone number
- * @param string $name Patient name
- * @param string $pf3_number PF3 number
- * @return array Response data
- */
-function sendPF3ApplicationSMS($phone, $name, $pf3_number) {
-    $lang = getCurrentLang();
-    
-    // Clean phone number first
-    $clean_phone = cleanPhoneNumber($phone);
-    
-    if (!validatePhoneNumber($clean_phone)) {
-        return ['success' => false, 'message' => 'Invalid phone number: ' . $phone];
-    }
-    
-    // NO EMOJIS, SIMPLE PLAIN TEXT
-    if ($lang === 'sw') {
-        // KISWAHILI - Max 155 chars
-        $message = "PF3 SYS: Mteja $name, maombi #$pf3_number yamewasilishwa. Tumia nambari kufuatilia. Asante!";
-        
-        if (strlen($message) > 155) {
-            $name_short = strlen($name) > 8 ? substr($name, 0, 8) : $name;
-            $message = "PF3 SYS: $name_short, maombi #$pf3_number yamewasilishwa. Tumia nambari. Asante!";
-            if (strlen($message) > 155) {
-                $message = "PF3 SYS: Maombi #$pf3_number yamewasilishwa. Asante!";
-            }
-        }
-    } else {
-        // ENGLISH - Max 155 chars
-        $message = "PF3 SYS: Dear $name, application #$pf3_number submitted. Use number to track. Thank you!";
-        
-        if (strlen($message) > 155) {
-            $name_short = strlen($name) > 8 ? substr($name, 0, 8) : $name;
-            $message = "PF3 SYS: Dear $name_short, app #$pf3_number submitted. Thank you!";
-            if (strlen($message) > 155) {
-                $message = "PF3 SYS: Application #$pf3_number submitted. Thank you!";
-            }
-        }
-    }
-    
-    return sendSMS($clean_phone, $message);
-}
-
-/**
  * Send PF3 Status Update SMS - APPROVED or REJECTED - NO EMOJIS
  * @param string $phone Patient phone number
  * @param string $name Patient name
@@ -253,94 +217,46 @@ function sendPF3StatusUpdateSMS($phone, $name, $pf3_number, $status, $police_not
         return ['success' => false, 'message' => 'Invalid phone number: ' . $phone];
     }
     
-    // NO EMOJIS - Simple plain text messages
+    // ============================================================
+    // Build the message based on status - KEEP IT SIMPLE
+    // ============================================================
     if ($status === 'APPROVED') {
-        // ============================================================
-        // APPROVED SMS - Patient should visit doctor/hospital
-        // NO EMOJIS, PLAIN TEXT ONLY
-        // ============================================================
+        // APPROVED SMS - Simple and clean
         if ($lang === 'sw') {
-            // KISWAHILI - APPROVED
-            $rb_text = $rb_number ? " RB: $rb_number." : ".";
-            $message = "PF3 SYS: Mteja $name, maombi #$pf3_number yamekubaliwa$rb_text Nenda hospitali kwa daktari. Asante!";
-            
-            // Shorten if needed (max 155 chars)
-            if (strlen($message) > 155) {
-                $name_short = strlen($name) > 6 ? substr($name, 0, 6) : $name;
-                $message = "PF3 SYS: $name_short, maombi #$pf3_number yamekubaliwa RB: $rb_number. Nenda hospitali. Asante!";
+            if (!empty($rb_number)) {
+                $message = "PF3 SYS: Mteja $name, maombi #$pf3_number yamekubaliwa. Namba RB: $rb_number. Nenda hospitali kwa daktari. Asante!";
+            } else {
+                $message = "PF3 SYS: Mteja $name, maombi #$pf3_number yamekubaliwa. Nenda hospitali kwa daktari. Asante!";
             }
-            // Final truncation to 155 chars
-            if (strlen($message) > 155) {
-                $message = substr($message, 0, 152) . '...';
-            }
-            
         } else {
-            // ENGLISH - APPROVED
-            $rb_text = $rb_number ? " RB: $rb_number." : ".";
-            $message = "PF3 SYS: Dear $name, application #$pf3_number APPROVED$rb_text Visit hospital. Thank you!";
-            
-            // Shorten if needed (max 155 chars)
-            if (strlen($message) > 155) {
-                $name_short = strlen($name) > 6 ? substr($name, 0, 6) : $name;
-                $message = "PF3 SYS: $name_short, app #$pf3_number APPROVED RB: $rb_number. Visit hospital. Thank you!";
-            }
-            // Final truncation to 155 chars
-            if (strlen($message) > 155) {
-                $message = substr($message, 0, 152) . '...';
+            if (!empty($rb_number)) {
+                $message = "PF3 SYS: Dear $name, application #$pf3_number APPROVED. RB Number: $rb_number. Visit hospital. Thank you!";
+            } else {
+                $message = "PF3 SYS: Dear $name, application #$pf3_number APPROVED. Visit hospital. Thank you!";
             }
         }
-    }
-    
+    } 
     elseif ($status === 'REJECTED') {
-        // ============================================================
-        // REJECTED SMS - Clear message with reason
-        // NO EMOJIS, PLAIN TEXT ONLY
-        // ============================================================
-        // Truncate police notes for SMS
-        $reason = $police_notes ? substr($police_notes, 0, 35) : 'No reason';
-        if (strlen($police_notes) > 35) {
+        // REJECTED SMS - Simple and clean
+        $reason = !empty($police_notes) ? substr($police_notes, 0, 40) : 'No reason provided';
+        if (strlen($police_notes) > 40) {
             $reason .= '...';
         }
         
         if ($lang === 'sw') {
-            // KISWAHILI - REJECTED
-            $reason_text = $police_notes ? " Sababu: $reason." : ".";
-            $message = "PF3 SYS: Mteja $name, maombi #$pf3_number yamekataliwa$reason_text Wasiliana na polisi. Asante!";
-            
-            // Shorten if needed (max 155 chars)
-            if (strlen($message) > 155) {
-                $name_short = strlen($name) > 6 ? substr($name, 0, 6) : $name;
-                $reason_short = $police_notes ? substr($police_notes, 0, 20) . '...' : '';
-                $reason_text = $reason_short ? " Sababu: $reason_short." : ".";
-                $message = "PF3 SYS: $name_short, maombi #$pf3_number yamekataliwa$reason_text Wasiliana polisi. Asante!";
-            }
-            // Final truncation to 155 chars
-            if (strlen($message) > 155) {
-                $message = substr($message, 0, 152) . '...';
-            }
-            
+            $message = "PF3 SYS: Mteja $name, maombi #$pf3_number yamekataliwa. Sababu: $reason. Wasiliana na polisi. Asante!";
         } else {
-            // ENGLISH - REJECTED
-            $reason_text = $police_notes ? " Reason: $reason." : ".";
-            $message = "PF3 SYS: Dear $name, application #$pf3_number REJECTED$reason_text Contact police. Thank you!";
-            
-            // Shorten if needed (max 155 chars)
-            if (strlen($message) > 155) {
-                $name_short = strlen($name) > 6 ? substr($name, 0, 6) : $name;
-                $reason_short = $police_notes ? substr($police_notes, 0, 20) . '...' : '';
-                $reason_text = $reason_short ? " Reason: $reason_short." : ".";
-                $message = "PF3 SYS: $name_short, app #$pf3_number REJECTED$reason_text Contact police. Thank you!";
-            }
-            // Final truncation to 155 chars
-            if (strlen($message) > 155) {
-                $message = substr($message, 0, 152) . '...';
-            }
+            $message = "PF3 SYS: Dear $name, application #$pf3_number REJECTED. Reason: $reason. Contact police. Thank you!";
         }
+    } else {
+        // Fallback for any other status
+        $message = "PF3 SYS: Your application #$pf3_number has been updated to $status. Contact police for details.";
     }
     
     // ============================================================
-    // FINAL CLEAN - Remove any remaining special characters
+    // CLEAN THE MESSAGE - Remove ALL special characters
     // ============================================================
+    // Remove emojis
     $message = preg_replace('/[\x{1F600}-\x{1F64F}]/u', '', $message);
     $message = preg_replace('/[\x{1F300}-\x{1F5FF}]/u', '', $message);
     $message = preg_replace('/[\x{1F680}-\x{1F6FF}]/u', '', $message);
@@ -348,11 +264,94 @@ function sendPF3StatusUpdateSMS($phone, $name, $pf3_number, $status, $police_not
     $message = preg_replace('/[\x{2700}-\x{27BF}]/u', '', $message);
     $message = preg_replace('/[\x{1F900}-\x{1F9FF}]/u', '', $message);
     $message = preg_replace('/[\x{1F700}-\x{1F77F}]/u', '', $message);
-    $message = str_replace(['*', '_', '~', '`', '|', '>', '<'], '', $message);
+    
+    // Remove special characters
+    $message = str_replace(['*', '_', '~', '`', '|', '>', '<', '✅', '❌', '📱', '📞'], '', $message);
+    
+    // Remove multiple spaces
+    $message = preg_replace('/\s+/', ' ', $message);
+    
+    // Trim
+    $message = trim($message);
+    
+    // ============================================================
+    // FALLBACK - If message is empty, use a simple message
+    // ============================================================
+    if (empty($message)) {
+        if ($status === 'APPROVED') {
+            $message = "PF3 SYS: Application #$pf3_number approved. Visit hospital. Thank you!";
+        } elseif ($status === 'REJECTED') {
+            $message = "PF3 SYS: Application #$pf3_number rejected. Contact police. Thank you!";
+        } else {
+            $message = "PF3 SYS: Application #$pf3_number updated to $status. Contact police.";
+        }
+        error_log("SMS Status Update: Using fallback message for PF3 $pf3_number");
+    }
+    
+    // ============================================================
+    // ENSURE MESSAGE IS NOT EMPTY - Final safety check
+    // ============================================================
+    if (empty($message)) {
+        $message = "PF3 SYS: Your application #$pf3_number has been updated. Contact police for details.";
+        error_log("SMS Status Update: Emergency fallback used for PF3 $pf3_number");
+    }
+    
+    // Limit to 155 characters
+    if (strlen($message) > 155) {
+        $message = substr($message, 0, 152) . '...';
+    }
+    
+    // Log the final message
+    error_log("SMS Status Update - Phone: $clean_phone, Status: $status, Message: $message");
+    
+    // Send the SMS
+    return sendSMS($clean_phone, $message);
+}
+
+/**
+ * Send PF3 Application SMS Notification - SIMPLE VERSION
+ * @param string $phone Patient phone number
+ * @param string $name Patient name
+ * @param string $pf3_number PF3 number
+ * @return array Response data
+ */
+function sendPF3ApplicationSMS($phone, $name, $pf3_number) {
+    $lang = getCurrentLang();
+    
+    // Clean phone number first
+    $clean_phone = cleanPhoneNumber($phone);
+    
+    if (!validatePhoneNumber($clean_phone)) {
+        return ['success' => false, 'message' => 'Invalid phone number: ' . $phone];
+    }
+    
+    // Simple message - no emojis
+    if ($lang === 'sw') {
+        $message = "PF3 SYS: Mteja $name, maombi #$pf3_number yamewasilishwa. Tumia nambari hii kufuatilia. Asante!";
+    } else {
+        $message = "PF3 SYS: Dear $name, application #$pf3_number submitted. Use number to track. Thank you!";
+    }
+    
+    // Clean message
+    $message = preg_replace('/[\x{1F600}-\x{1F64F}]/u', '', $message);
+    $message = preg_replace('/[\x{1F300}-\x{1F5FF}]/u', '', $message);
+    $message = preg_replace('/[\x{1F680}-\x{1F6FF}]/u', '', $message);
+    $message = preg_replace('/[\x{2600}-\x{26FF}]/u', '', $message);
+    $message = preg_replace('/[\x{2700}-\x{27BF}]/u', '', $message);
+    $message = str_replace(['*', '_', '~', '`', '|', '>', '<', '✅', '❌', '📱', '📞'], '', $message);
     $message = preg_replace('/\s+/', ' ', $message);
     $message = trim($message);
     
-    // Return the SMS response
+    // Fallback if empty
+    if (empty($message)) {
+        $message = "PF3 SYS: Application #$pf3_number submitted. Thank you!";
+    }
+    
+    // Limit to 155 characters
+    if (strlen($message) > 155) {
+        $message = substr($message, 0, 152) . '...';
+    }
+    
     return sendSMS($clean_phone, $message);
 }
 

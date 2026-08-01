@@ -27,7 +27,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $email = trim($_POST['email']);
         $phone = trim($_POST['phone']);
         
-        // Validation
         $errors = [];
         
         if (empty($first_name)) $errors[] = "First name is required";
@@ -37,7 +36,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = "Invalid email format";
         if (empty($phone)) $errors[] = "Phone number is required";
         
-        // Check if email already exists for another doctor
         $stmt = $pdo->prepare("SELECT id FROM doctors WHERE email = ? AND id != ?");
         $stmt->execute([$email, $user_id]);
         if ($stmt->fetch()) {
@@ -53,12 +51,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ");
                 $stmt->execute([$first_name, $last_name, $position, $email, $phone, $user_id]);
                 
-                // Update session name
                 $_SESSION['user_name'] = 'Dr. ' . $first_name . ' ' . $last_name;
-                
                 $success_message = "Profile updated successfully!";
                 
-                // Refresh doctor data
                 $stmt = $pdo->prepare("SELECT * FROM doctors WHERE id = ?");
                 $stmt->execute([$user_id]);
                 $doctor = $stmt->fetch();
@@ -73,7 +68,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
-    // Handle password change
     if (isset($_POST['change_password'])) {
         $current_password = $_POST['current_password'];
         $new_password = $_POST['new_password'];
@@ -86,7 +80,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (strlen($new_password) < 6) $errors[] = "New password must be at least 6 characters";
         if ($new_password !== $confirm_password) $errors[] = "New passwords do not match";
         
-        // Verify current password
         if (empty($errors)) {
             if (!password_verify($current_password, $doctor['password'])) {
                 $errors[] = "Current password is incorrect";
@@ -120,6 +113,16 @@ $stmt = $pdo->prepare("SELECT COUNT(DISTINCT pf3_number) as total_patients FROM 
 $stmt->execute([$user_id]);
 $total_patients = $stmt->fetch()['total_patients'];
 
+// Get severity breakdown
+$stmt = $pdo->prepare("
+    SELECT severity, COUNT(*) as count 
+    FROM medical_reports 
+    WHERE doctor_id = ? 
+    GROUP BY severity
+");
+$stmt->execute([$user_id]);
+$severity_stats = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
 // Get recent activity
 $stmt = $pdo->prepare("
     SELECT * FROM audit_logs 
@@ -135,12 +138,13 @@ include 'header.php';
 
 <style>
     .profile-header-card {
-        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        background: linear-gradient(135deg, #0d47a1 0%, #1976d2 100%);
         border-radius: 20px;
         padding: 2rem;
         margin-bottom: 1.5rem;
         position: relative;
         overflow: hidden;
+        color: white;
     }
     
     .profile-header-card::before {
@@ -171,18 +175,20 @@ include 'header.php';
     .profile-avatar-large span {
         font-size: 48px;
         font-weight: 700;
-        color: #11998e;
+        color: #0d47a1;
     }
     
     .stat-card-profile {
         border: none;
         border-radius: 15px;
         transition: all 0.3s ease;
+        background: white;
+        border-left: 4px solid #0d47a1;
     }
     
     .stat-card-profile:hover {
         transform: translateY(-3px);
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 5px 20px rgba(13, 71, 161, 0.1);
     }
     
     .info-card {
@@ -190,11 +196,12 @@ include 'header.php';
         border-radius: 20px;
         box-shadow: 0 2px 15px rgba(0,0,0,0.05);
         margin-bottom: 1.5rem;
+        background: white;
     }
     
     .info-card .card-header {
         background: white;
-        border-bottom: 2px solid #f0f0f0;
+        border-bottom: 2px solid #e8eaf6;
         padding: 1.25rem 1.5rem;
         border-radius: 20px 20px 0 0;
     }
@@ -235,12 +242,12 @@ include 'header.php';
     }
     
     .nav-tabs-custom .nav-link:hover {
-        color: #11998e;
+        color: #0d47a1;
         background: transparent;
     }
     
     .nav-tabs-custom .nav-link.active {
-        color: #11998e;
+        color: #0d47a1;
         background: transparent;
     }
     
@@ -251,12 +258,12 @@ include 'header.php';
         left: 0;
         right: 0;
         height: 2px;
-        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        background: linear-gradient(135deg, #0d47a1 0%, #1976d2 100%);
     }
     
     .timeline-item-profile {
         padding: 1rem;
-        border-left: 3px solid #11998e;
+        border-left: 3px solid #0d47a1;
         margin-bottom: 1rem;
         background: #f8f9fa;
         border-radius: 10px;
@@ -264,14 +271,41 @@ include 'header.php';
     }
     
     .timeline-item-profile:hover {
-        background: white;
+        background: #e3f2fd;
         box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    .btn-primary {
+        background: #0d47a1;
+        border-color: #0d47a1;
+    }
+    
+    .btn-primary:hover {
+        background: #0a3a8a;
+        border-color: #0a3a8a;
+    }
+    
+    .btn-warning {
+        background: #ff9800;
+        border-color: #ff9800;
+        color: white;
+    }
+    
+    .btn-warning:hover {
+        background: #e68900;
+        border-color: #e68900;
+        color: white;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #0d47a1;
+        box-shadow: 0 0 0 0.25rem rgba(13, 71, 161, 0.15);
     }
 </style>
 
 <div class="row g-4">
     <div class="col-lg-4">
-        <div class="profile-header-card text-center text-white">
+        <div class="profile-header-card text-center">
             <div class="profile-avatar-large">
                 <span>
                     <?php 
@@ -303,7 +337,7 @@ include 'header.php';
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <span class="text-muted small text-uppercase">Total Reports</span>
-                                <h3 class="mb-0 fw-bold mt-1"><?php echo $total_reports; ?></h3>
+                                <h3 class="mb-0 fw-bold mt-1 text-primary"><?php echo $total_reports; ?></h3>
                             </div>
                             <div class="bg-primary bg-opacity-10 p-3 rounded-circle">
                                 <i class="fas fa-file-medical fa-2x text-primary"></i>
@@ -313,7 +347,7 @@ include 'header.php';
                 </div>
             </div>
             <div class="col-12">
-                <div class="card stat-card-profile shadow-sm">
+                <div class="card stat-card-profile shadow-sm" style="border-left-color: #28a745;">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
@@ -327,12 +361,27 @@ include 'header.php';
                     </div>
                 </div>
             </div>
+            <div class="col-12">
+                <div class="card stat-card-profile shadow-sm" style="border-left-color: #ff9800;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-muted small text-uppercase">Severe Cases</span>
+                                <h3 class="mb-0 fw-bold mt-1 text-warning"><?php echo $severity_stats['Severe'] ?? 0; ?></h3>
+                            </div>
+                            <div class="bg-warning bg-opacity-10 p-3 rounded-circle">
+                                <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="card info-card">
             <div class="card-header">
-                <h6 class="mb-0 fw-bold">
-                    <i class="fas fa-address-card me-2 text-primary"></i>Contact Information
+                <h6 class="mb-0 fw-bold text-primary">
+                    <i class="fas fa-address-card me-2"></i>Contact Information
                 </h6>
             </div>
             <div class="card-body">
@@ -380,6 +429,19 @@ include 'header.php';
                 </ul>
             </div>
             <div class="card-body">
+                <?php if ($success_message): ?>
+                    <div class="alert alert-success alert-dismissible fade show">
+                        <i class="fas fa-check-circle me-2"></i> <?php echo $success_message; ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php endif; ?>
+                <?php if ($error_message): ?>
+                    <div class="alert alert-danger alert-dismissible fade show">
+                        <i class="fas fa-exclamation-circle me-2"></i> <?php echo $error_message; ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php endif; ?>
+                
                 <div class="tab-content">
                     <div class="tab-pane fade show active" id="edit">
                         <form method="POST" action="">
@@ -444,7 +506,7 @@ include 'header.php';
                             <?php foreach ($activities as $activity): ?>
                                 <div class="timeline-item-profile">
                                     <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <strong><?php echo htmlspecialchars($activity['action']); ?></strong>
+                                        <strong class="text-primary"><?php echo htmlspecialchars($activity['action']); ?></strong>
                                         <small class="text-muted"><?php echo date('d/m/Y H:i:s', strtotime($activity['created_at'])); ?></small>
                                     </div>
                                     <p class="mb-0 text-muted small"><?php echo htmlspecialchars($activity['details']); ?></p>
